@@ -15,11 +15,11 @@ Usage:
 How to install:
 
 mkdir /usr/local/bin/list-vpn-src
-cp ./list-vpn.py /usr/local/bin/list-vpn-src/list-vpn.py
-cp ./nmcli_util.py /usr/local/bin/list-vpn-src/nmcli_util.py
-cp ./vpn_util.py /usr/local/bin/list-vpn-src/vpn_util.py
-cp ./util.py /usr/local/bin/list-vpn-src/util.py
-cp ./list-vpn /usr/local/bin/list-vpn
+cp -f ./list-vpn.py /usr/local/bin/list-vpn-src/list-vpn.py
+cp -f ./nmcli_util.py /usr/local/bin/list-vpn-src/nmcli_util.py
+cp -f ./vpn_util.py /usr/local/bin/list-vpn-src/vpn_util.py
+cp -f ./util.py /usr/local/bin/list-vpn-src/util.py
+cp -f ./list-vpn /usr/local/bin/list-vpn
 chmod +x /usr/local/bin/list-vpn
 
 then run 'list-vpn -h'
