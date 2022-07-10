@@ -1,0 +1,25 @@
+Simple script for parsing public VPNGate VPN lists.
+
+
+Usage:
+	
+	list-vpn [-h] [-u] [-l] [-s HOSTNAME] [-c HOSTNAME]
+
+	-h, --help          show this help message and exit
+	-u, --update-cache  update VPN list cache                  
+	-l, --list          list VPN servers                       
+	-s HOSTNAME         save OpenVPN config for given server                                                  
+	-c HOSTNAME         connect to known VPN server using its hostname
+
+
+How to install:
+
+mkdir /usr/local/bin/list-vpn-src
+cp ./list-vpn.py /usr/local/bin/list-vpn-src/list-vpn.py
+cp ./nmcli_util.py /usr/local/bin/list-vpn-src/nmcli_util.py
+cp ./vpn_util.py /usr/local/bin/list-vpn-src/vpn_util.py
+cp ./util.py /usr/local/bin/list-vpn-src/util.py
+cp ./list-vpn /usr/local/bin/list-vpn
+chmod +x /usr/local/bin/list-vpn
+
+then run 'list-vpn -h'
