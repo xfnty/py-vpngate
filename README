@@ -14,7 +14,7 @@ Usage:
 
 How to install:
 
-mkdir /usr/local/bin/list-vpn-src
+mkdir /usr/local/bin/list-vpn-src &> /dev/null
 cp -f ./list-vpn.py /usr/local/bin/list-vpn-src/list-vpn.py
 cp -f ./nmcli_util.py /usr/local/bin/list-vpn-src/nmcli_util.py
 cp -f ./vpn_util.py /usr/local/bin/list-vpn-src/vpn_util.py
