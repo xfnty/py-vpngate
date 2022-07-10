@@ -1,5 +1,6 @@
 from vpn_util import *
 from nmcli_util import *
+from util import ping
 
 
 PAGE_SIZE = 5
@@ -64,7 +65,6 @@ def connect_using_nmcli(openvpn_config_filepath: str) -> bool:
 	if not nmcli_enable_connection(connection_name):
 		return False
 
-	print('Connection established')
 	return True
 
 
@@ -81,7 +81,8 @@ def connect_vpn(vpns: list, hostname: str):
 		return
 
 	if which('nmcli') is not None:
-		connect_using_nmcli(openvpn_config_filepath)
+		if connect_using_nmcli(openvpn_config_filepath):
+			print(f"Ping to google.com: {ping('google.com', count=3)} ms")
 	elif which('openvpn') is not None:
 		connect_using_openvpn(openvpn_config_filepath)
 	else:
