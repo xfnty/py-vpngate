@@ -23,3 +23,8 @@ cp -f ./list-vpn /usr/local/bin/list-vpn
 chmod +x /usr/local/bin/list-vpn
 
 then run 'list-vpn -h'
+
+
+Known problems:
+
+- The scipt can't really detect whether 'nmcli' has failed or not
