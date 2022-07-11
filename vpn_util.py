@@ -1,5 +1,5 @@
 import util
-requests = util.try_import('requests', pip_name='requests')
+requests = util.try_import('requests')
 from os import path, system
 from shutil import which
 import os

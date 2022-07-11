@@ -1,10 +1,11 @@
 from vpn_util import *
 from nmcli_util import *
-from util import ping
+from util import ping, format_bytes
 
 
 PAGE_SIZE = 5
 ARGS = None
+ARG_PARSER = None
 
 
 
@@ -16,7 +17,7 @@ def list_vpns(vpns: list):
 
 
 def list_lowest_ping(vpns: list):
-	vpns = sorted(vpns, key=lambda vpn: int(vpn['Ping']))
+	vpns = sorted(vpns, key=lambda vpn: 1000 if not vpn['Ping'].isnumeric() else int(vpn['Ping']))
 	
 	print('VPNs with lowest ping:')
 	for i in range(3):
@@ -92,8 +93,27 @@ def connect_vpn(vpns: list, hostname: str):
 
 
 
+def show_hostname(vpns: list, hostname: str):
+	vpn = next((v for v in vpns if v['HostName'] == hostname), None)
+	if vpn == None:
+		print(f"Can not find VPN with name '{hostname}'")
+		return
+	print('{:<15} {}'.format('Host name:', vpn['HostName']))
+	print('{:<15} {}'.format('IP:', vpn['IP']))
+	print('{:<15} {} ms'.format('Ping:', vpn['Ping']))
+	print('{:<15} {}'.format('Speed:', format_bytes(int(vpn['Speed']))))
+	print('{:<15} {}'.format('Up time:', vpn['Uptime']))
+	print('{:<15} {}'.format('VPN sessions:', vpn['NumVpnSessions']))
+	print('{:<15} {}'.format('Total users:', vpn['TotalUsers']))
+	print('{:<15} {}'.format('Total traffic:', format_bytes(int(vpn['TotalTraffic']))))
+	print('{:<15} {}'.format('Log type:', vpn['LogType']))
+	print('{:<15} {}'.format('Operator:', vpn['Operator']))
+	print('{:<15} {}'.format('Description:', vpn['Message']))
+
+
+
 def main():
-	global ARGS
+	global ARGS, ARG_PARSER
 	
 	vpns = update_vpn_cache(ARGS.should_update)
 
@@ -103,8 +123,12 @@ def main():
 		connect_vpn(vpns, ARGS.connect_hostname)
 	elif ARGS.profile_name != None:
 		save_openvpn_config(vpns, ARGS.profile_name)
-	elif not ARGS.should_update:
+	elif ARGS.show_best:
 		list_lowest_ping(vpns)
+	elif ARGS.show_hostname != None:
+		show_hostname(vpns, ARGS.show_hostname)
+	else:
+		ARG_PARSER.print_help()
 
 
 
@@ -116,16 +140,18 @@ if __name__ == '__main__':
 		if path.exists(VPN_CACHE_FILEPATH):
 			epilog = f"VPN cache '{VPN_CACHE_FILEPATH}' contains {len(parse_vpn_cache(verbose=False))} entries."
 
-		parser = argparse.ArgumentParser(
+		ARG_PARSER = argparse.ArgumentParser(
 			prog='list-vpn',
 			description='Parses public VPN lists and gives best VPN suggestions.',
 			epilog=epilog
 		)
-		parser.add_argument('-u', '--update-cache', dest='should_update', action='store_true', help=f"update VPN list cache")
-		parser.add_argument('-l', '--list', dest='print_list', action='store_true', help=f"list VPN servers")
-		parser.add_argument('-s', metavar='HOSTNAME', dest='profile_name', const=None, help=f"save OpenVPN config for given server")
-		parser.add_argument('-c', metavar='HOSTNAME', dest='connect_hostname', const=None, help=f"connect to known VPN server using its hostname")
-		ARGS = parser.parse_args()
+		ARG_PARSER.add_argument('-l', dest='print_list', action='store_true', help=f"list cached VPN servers")
+		ARG_PARSER.add_argument('-u', dest='should_update', action='store_true', help=f"update VPN list cache")
+		ARG_PARSER.add_argument('-b', dest='show_best', action='store_true', help=f"show VPNs with lowest ping")
+		ARG_PARSER.add_argument('-d', metavar='HOSTNAME', dest='profile_name', const=None, help=f"save OpenVPN config for given server")
+		ARG_PARSER.add_argument('-c', metavar='HOSTNAME', dest='connect_hostname', const=None, help=f"connect to known VPN server using its hostname")
+		ARG_PARSER.add_argument('-s', metavar='HOSTNAME', dest='show_hostname', const=None, help=f"show more information about specified host")
+		ARGS = ARG_PARSER.parse_args()
 		main()
 	except KeyboardInterrupt:
 		print()
