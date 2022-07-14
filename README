@@ -3,28 +3,18 @@ Simple script for parsing public VPNGate VPN lists.
 
 Usage:
 	
-	usage: vpngate [-h] [-l] [-u] [-b] [-d HOSTNAME] [-s HOSTNAME]
+	vpngate [-h] [-l] [-u] [-b] [-d HOSTNAME] [-s HOSTNAME]
 
 	optional arguments:
 	  -h, --help   show this help message and exit
 	  -l           list cached VPN servers
 	  -u           update VPN list cache
 	  -b           show VPNs with lowest ping
-	  -d HOSTNAME  save OpenVPN config for given server
-	  -s HOSTNAME  show more information about specified host
-
-
-How to install:
-
-rm -r /usr/local/bin/py-vpngate-src &> /dev/null
-rm -r /usr/local/bin/vpngate &> /dev/null
-cp -f -r ./src /usr/local/bin/py-vpngate-src
-cp -f ./vpngate /usr/local/bin/vpngate
-chmod +x /usr/local/bin/vpngate
-
-then run 'vpngate -h'
+	  --save HOSTNAME  save OpenVPN config for given server
+	  --show HOSTNAME  show more information about specified host
 
 
 Known problems:
 
 - Can't connect to VPN for now
+
