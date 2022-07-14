@@ -17,6 +17,10 @@ def make_request(url: str, verbose=True) -> object:
 		return False
 	if not resp:
 		if verbose:
-			print(f"Request failed:\n  '{url}'\n  Code: {resp.status_code}")
+			print(f"Request failed:\n  '{url}'\n  status code: {resp.status_code}")
 		return False
 	return resp
+
+
+def ping(addr: str, count=1, timeout=1) -> float:
+	raise Exception('ping(...) is not implemented yet')

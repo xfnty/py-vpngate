@@ -1,9 +1,5 @@
 #!/bin/bash
 
-START_DIR="$PWD"
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && pwd 2> /dev/null; )";
 
-cd "$SCRIPT_DIR"
-python3 py-vpngate-src/main.py $@
-cd "$START_DIR"
-
+python3 $SCRIPT_DIR/py-vpngate-src/vpngate.py $@

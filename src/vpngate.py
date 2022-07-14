@@ -12,4 +12,4 @@ if __name__ == '__main__':
 		app.close()
 
 else:
-	print("Don't use 'main' module")
+	print("Don't use 'main.py' as module")
