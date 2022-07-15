@@ -3,6 +3,8 @@ from .VPNConfig import *
 
 
 class VPN:
+	"""Holds common information about VPN host."""
+
 	def __init__(
 			self,
 			host='none',
@@ -45,7 +47,7 @@ class VPN:
 			entry['Operator'],
 			entry['OpenVPN_ConfigData_Base64']
 		)
-	
+
 	def print_description(self):
 		print('{:<15} {}'.format('Host name:', self.host))
 		print('{:<15} {}'.format('IP:', self.ip))

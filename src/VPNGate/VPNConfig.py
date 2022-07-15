@@ -3,7 +3,7 @@ import base64
 
 
 class VPNConfig:
-	"""Manages VPN config file contents."""
+	"""Holds VPN config file contents."""
 
 	def __init__(self, text='', text_base64=None):
 		if text_base64 is None:

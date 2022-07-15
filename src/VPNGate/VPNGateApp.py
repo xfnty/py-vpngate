@@ -29,6 +29,13 @@ class VPNGateApp:
 		self.vpn_manager = VPNManager()
 
 	def run(self):
+		"""
+		Launch the app.
+
+		Throws:
+			Any kind of exception
+		"""
+		
 		self.args = self.arg_parser.parse_args()
 
 		self.cache.init(dont_update=True)
@@ -83,6 +90,14 @@ class VPNGateApp:
 			self.arg_parser.print_help()
 
 	def close(self):
-		self.vpn_manager.shutdown()
-		self.cache.shutdown()
-		pass
+		"""
+		Close the app.
+
+		No Throw
+		"""
+
+		try:
+			self.vpn_manager.shutdown()
+			self.cache.shutdown()
+		except Exception:
+			pass

@@ -8,10 +8,14 @@ def best_vpn_by_speed(vpns: [VPN], count=3) -> [VPN]:
 
 	return sorted(vpns, key=lambda v: -v.speed)[:min(count, len(vpns))]
 
+
 def best_vpn_by_ping(vpns: [VPN], count=1) -> [VPN]:
 	return sorted(vpns, key=lambda v: ping(v.ip))[:min(count, len(vpns))]
 
+
 def filter_vpn_by_connectable(vpns: [VPN], vpn_manager: VPNManager, count=1) -> [VPN]:
+	"""Creates system VPN profile for every VPN entry and tries to connect to it."""
+
 	global TMP_VPN_CONFIG_FILEPATH
 
 	def key(vpn: VPN) -> bool:

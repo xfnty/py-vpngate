@@ -8,19 +8,35 @@ except Exception:
 
 
 def make_request(url: str, verbose=True) -> object:
+	"""
+	Parameters:
+		verbose: if set, funciton will print error messages
+
+	Returns:
+		Response
+		None
+
+	No Throw
+	"""
+
 	resp = None
 	try:
 		resp = requests.get(url)
 	except Exception as e:
 		if verbose:
 			print(f"Request failed:\n  '{url}'\n  {str(e)}")
-		return False
+		return None
 	if not resp:
 		if verbose:
 			print(f"Request failed:\n  '{url}'\n  status code: {resp.status_code}")
-		return False
+		return None
 	return resp
 
 
 def ping(addr: str, count=1, timeout=1) -> float:
-	raise Exception('ping(...) is not implemented yet')
+	"""
+	Throws:
+		Network related exceptions
+	"""
+
+	raise NotImplementedError('ping() is not implemented yet')

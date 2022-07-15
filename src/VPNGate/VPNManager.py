@@ -4,6 +4,7 @@ import os
 
 
 class VPNProfile:
+	"""Represents system VPN profile."""
 	def __init__(self, name='none', uuid='none'):
 		self.name = name
 		self.uuid = uuid
@@ -21,12 +22,14 @@ class VPNManager:
 		"""
 		No Throw
 		"""
+
 		pass
 
 	def shutdown(self):
 		"""
 		No Throw
 		"""
+
 		self._nmcli_log.close()
 		os.remove(self._nmcli_log_path)
 		pass
