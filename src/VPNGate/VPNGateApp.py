@@ -52,7 +52,7 @@ class VPNGateApp:
 			print('Downloading VPN list...')
 			self.cache.update()
 
-		if self.args.save_config_hostname != None:
+		if self.args.save_config_hostname is not None:
 			self._save_config(self.args.save_config_hostname)
 
 		elif self.args.connect_best:
