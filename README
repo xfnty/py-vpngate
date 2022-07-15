@@ -2,6 +2,7 @@ Simple script for parsing public VPNGate VPN lists.
 
 
 Usage:
+	Run 'vpngate -u -cb' to update cache and connect to available VPN
 	
 	vpngate [-h] [-l] [-u] [-b] [-cb] [-c HOSTNAME] [-p HOSTNAME] [-s HOSTNAME]
                [-t TIMEOUT]
