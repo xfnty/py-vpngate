@@ -52,7 +52,7 @@ class VPN:
 		print('{:<15} {}'.format('Host name:', self.host))
 		print('{:<15} {}'.format('IP:', self.ip))
 		print('{:<15} {} ms'.format('Ping:', self.ping))
-		print('{:<15} {}'.format('Speed:', format_bytes(self.speed)))
+		print('{:<15} {}ps'.format('Speed:', format_bytes(self.speed)))
 		print('{:<15} {}'.format('Up time:', self.uptime))
 		print('{:<15} {}'.format('VPN sessions:', self.sessions))
 		print('{:<15} {}'.format('Total traffic:', format_bytes(self.traffic)))

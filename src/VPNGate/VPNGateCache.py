@@ -3,22 +3,26 @@ import base64
 import os
 from .VPN import *
 from .VPNConfig import *
-from .NetworkingUtils import *
 from .FormatUtils import *
+from .NetworkingUtils import *
+from .FilesystemUtils import *
 
 
 VPNGATE_API_URL = 'https://www.vpngate.net/api/iphone'
+VPNGATE_CACHE_FILENAME = '.vpngate_cache'
 
 
 class VPNGateCache:
 	"""Manages local cache with all the VPN parameters."""
 
-	def __init__(self, cache_path='./.vpngate_cache'):
-		self.cache_filepath = cache_path
-		self.vpns = []
-		pass
+	global VPNGATE_CACHE_FILENAME
 
-	def init(self, dont_update=False):
+	def __init__(self):
+		self.work_dir = get_file_dirname(__file__)
+		self.cache_filepath = None
+		self.vpns = None
+
+	def init(self, work_dir=None, dont_update=False):
 		"""
 		Checks whether the cache is valid and if not downloads a new one.
 
@@ -28,6 +32,11 @@ class VPNGateCache:
 		Throws:
 			Any kind of exception
 		"""
+
+		if work_dir is not None:
+			self.work_dir = work_dir
+		self.cache_filepath = os.path.join(work_dir, VPNGATE_CACHE_FILENAME)
+		self.vpns = []
 
 		if not dont_update and not self.is_cache_valid():
 			self._download_cache()
@@ -106,16 +115,13 @@ class VPNGateCache:
 		"""
 		Reads cache and loads VPNs into 'self.vpns' list.
 
-		Throws:
-			File IO related exceptions
-			CSV parsing related exceptions
+		No Throw
 		"""
 
 		try:
 			with open(self.cache_filepath) as file:
 				self.vpns = [VPN.from_cache_entry(e) for e in list(csv.DictReader(file))]
 		except Exception as e:
-			raise e
 			return False
 		return True
 
