@@ -1,7 +1,8 @@
 import csv
 import base64
 import os
-from .VPN import VPN
+from .VPN import *
+from .VPNConfig import *
 from .NetworkingUtils import *
 from .FormatUtils import *
 
@@ -25,8 +26,12 @@ class VPNGateCache:
 		self._load_cache_entries()
 
 	def shutdown(self):
-		if not self.is_cache_valid():
-			os.remove(self.cache_filepath)
+		"""No Throw"""
+		try:
+			if not self.is_cache_valid():
+				os.remove(self.cache_filepath)
+		except Exception:
+			pass
 
 	def is_cache_valid(self) -> bool:
 		"""Warning! This method doesn't check whether the cache is a valid CSV file."""
@@ -43,16 +48,17 @@ class VPNGateCache:
 		"""Downloads a new cache."""
 
 		self._download_cache()
-		self._load_cache_entries()
+		if not self._load_cache_entries():
+			print('Failed to load cache entries')
+		if not self.is_cache_valid():
+			print('Cache is invalid after update')
 
 	def save_config(self, host: str, filepath: str) -> bool:
 		try:
 			vpn = self.find(host=host)
 			if vpn is None:
-				print(f"Unknown VPN host name '{host}'")
 				return False
-			with open(filepath, 'wb') as file:
-				file.write(base64.b64decode(vpn.config_base64))
+			vpn.config.save(filepath)
 		except Exception as e:
 			os.remove(filepath)
 			raise e
@@ -66,7 +72,7 @@ class VPNGateCache:
 			with open(self.cache_filepath) as file:
 				self.vpns = [VPN.from_cache_entry(e) for e in list(csv.DictReader(file))]
 		except Exception as e:
-			# raise e
+			raise e
 			return False
 		return True
 

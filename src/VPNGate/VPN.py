@@ -1,4 +1,5 @@
 from .FormatUtils import *
+from .VPNConfig import *
 
 
 class VPN:
@@ -27,7 +28,7 @@ class VPN:
 		self.uptime = uptime
 		self.operator = operator
 		self.description = description
-		self.config_base64 = config_base64
+		self.config = VPNConfig(text_base64=config_base64)
 
 	def from_cache_entry(entry: dict):
 		return VPN(
@@ -35,11 +36,11 @@ class VPN:
 			entry['IP'],
 			entry['CountryShort'],
 			entry['CountryLong'],
-			int(entry['Ping']),
-			int(entry['TotalTraffic']),
-			int(entry['NumVpnSessions']),
-			int(entry['Speed']),
-			int(entry['Uptime']),
+			int(entry['Ping']) if entry['Ping'].isnumeric() else -1,
+			int(entry['TotalTraffic']) if entry['TotalTraffic'].isnumeric() else -1,
+			int(entry['NumVpnSessions']) if entry['NumVpnSessions'].isnumeric() else -1,
+			int(entry['Speed']) if entry['Speed'].isnumeric() else -1,
+			int(entry['Uptime']) if entry['Uptime'].isnumeric() else -1,
 			entry['Message'],
 			entry['Operator'],
 			entry['OpenVPN_ConfigData_Base64']

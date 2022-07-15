@@ -1,5 +1,5 @@
 .vpngate_cache*
-.nmcli_out
+.vpngate_nmcli_out
 _old/
 
 # Byte-compiled / optimized / DLL files
