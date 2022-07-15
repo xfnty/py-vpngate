@@ -1,4 +1,5 @@
 import subprocess
+import time
 
 
 class ExecutionResult:
@@ -13,24 +14,33 @@ class ExecutionResult:
 
 	def __str__(self) -> str:
 		return f"Execution {'succeded' if self.succeded else 'failed'}" +\
-			'' if self.succeded else f'\nError:\n{self.stdout}'
+			f"\nstdout:\n{self.stdout}"
 
 
-def exec(*args: list) -> ExecutionResult:
+def exec(*args: list, timeout=10) -> ExecutionResult:
 	"""
 	Executes given commands and waits for them to finish.
 
 	No Throw
 	"""
-	
-	stdout = ''
+	output = ''
 	try:
-		result = subprocess.check_output(
-			args,
-			shell=False,
-			stderr=subprocess.STDOUT
-		)
-		stdout = '' if result is None else result.decode('utf-8')
-		return ExecutionResult(True, stdout)
+		output = subprocess.check_output(' '.join(args), shell=True, stderr=subprocess.STDOUT, timeout=timeout)
+		return ExecutionResult(True, output.decode('utf-8'))
 	except Exception as e:
-		return ExecutionResult(False, stdout)
+		#raise e
+		return ExecutionResult(False, output)
+	
+	"""
+	stdout = ''
+	#try:
+	result = subprocess.check_output(
+		args,
+		shell=True#,
+		#stderr=subprocess.STDOUT
+	)
+	stdout = '' if result is None else result.decode('utf-8')
+	return ExecutionResult(True, stdout)
+	#except Exception as e:
+	#	return ExecutionResult(False, stdout)
+	"""

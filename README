@@ -3,18 +3,25 @@ Simple script for parsing public VPNGate VPN lists.
 
 Usage:
 	
-	vpngate [-h] [-l] [-u] [-b] [-d HOSTNAME] [-s HOSTNAME]
+	vpngate [-h] [-l] [-u] [-b] [-cb] [-c HOSTNAME] [-p HOSTNAME] [-s HOSTNAME]
+               [-t TIMEOUT]
+
+	Parses public VPN lists and gives best VPN suggestions.
 
 	optional arguments:
 	  -h, --help   show this help message and exit
 	  -l           list cached VPN servers
 	  -u           update VPN list cache
-	  -b           show VPNs with lowest ping
-	  --save HOSTNAME  save OpenVPN config for given server
-	  --show HOSTNAME  show more information about specified host
+	  -b           show VPNs with highest speed
+	  -cb          find best VPN and connect to it. You can always press Ctrl+C to abort the
+		           operation
+	  -c HOSTNAME  connect to VPN host
+	  -p HOSTNAME  show more information about specified host
+	  -s HOSTNAME  save OpenVPN config for given server
+	  -t TIMEOUT   specify timeout for connect commands
 
 
 Known problems:
 
-- Can't connect to VPN for now
-
+- Uses only NetworkManager's CLI to make connections
+- Almost untested

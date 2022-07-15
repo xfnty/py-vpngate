@@ -80,7 +80,7 @@ class VPNManager:
 
 		return next((p for p in self.get_profiles() if p.name == name), None)
 
-	def create_openvpn(self, config: VPNConfig, name: str=None) -> VPNProfile:
+	def create_openvpn(self, config: VPNConfig, name: str) -> VPNProfile:
 		"""
 		Creates system VPN profile.
 
@@ -92,7 +92,21 @@ class VPNManager:
 			OSError
 		"""
 
-		raise NotImplementedError('Not implemented yet')
+		existing_profile = self.get_profile(name)
+		if existing_profile is not None:
+			self.remove(existing_profile)
+
+		filepath = os.path.join(self.work_dir, name + '.ovpn')
+		config.save(filepath)
+
+		execution = exec('nmcli', 'connection', 'import', 'type', 'openvpn', 'file', f"'{filepath}'")
+
+		os.remove(filepath)
+		
+		if not execution.succeded or self._nmcli_error_detected(execution.stdout):
+			return None
+
+		return self.get_profile(name)
 
 	def remove(self, profile: VPNProfile) -> bool:
 		"""
@@ -101,9 +115,10 @@ class VPNManager:
 		No Throw
 		"""
 
-		raise NotImplementedError('Not implemented yet')
+		execution = exec('nmcli', 'connection', 'delete', profile.uuid)
+		return execution.succeded and not self._nmcli_error_detected(execution.stdout)
 
-	def connect(self, profile: VPNProfile) -> bool:
+	def connect(self, profile: VPNProfile, timeout=10) -> bool:
 		"""
 		Tries to connect to system VPN profile.
 		
@@ -112,8 +127,8 @@ class VPNManager:
 
 		No Throw
 		"""
-
-		raise NotImplementedError('Not implemented yet')
+		execution = exec('nmcli', 'connection', 'up', profile.uuid, timeout=timeout)
+		return execution.succeded and not self._nmcli_error_detected(execution.stdout)
 
 	def disconnect(self, profile: VPNProfile) -> bool:
 		"""
@@ -122,16 +137,8 @@ class VPNManager:
 		No Throw
 		"""
 
-		raise NotImplementedError('Not implemented yet')
-
-	def modify(self, profile: VPNProfile, property: str, value: str) -> bool:
-		"""
-		Tries to modify system VPN profile.
-
-		No Throw
-		"""
-
-		raise NotImplementedError('Not implemented yet')
+		execution = exec('nmcli', 'connection', 'down', profile.uuid)
+		return execution.succeded and not self._nmcli_error_detected(execution.stdout)
 
 	def _nmcli_error_detected(self, stdout: str) -> bool:
 		return 'Error' in stdout
