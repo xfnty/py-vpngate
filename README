@@ -26,3 +26,4 @@ Known problems:
 - Uses only NetworkManager's CLI to make connections
 - Almost untested
 - '.vpngate_nmcli_output' is unused
+- Code quality...
