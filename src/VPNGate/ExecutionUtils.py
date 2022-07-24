@@ -30,17 +30,3 @@ def exec(*args: list, timeout=10) -> ExecutionResult:
 	except Exception as e:
 		#raise e
 		return ExecutionResult(False, output)
-	
-	"""
-	stdout = ''
-	#try:
-	result = subprocess.check_output(
-		args,
-		shell=True#,
-		#stderr=subprocess.STDOUT
-	)
-	stdout = '' if result is None else result.decode('utf-8')
-	return ExecutionResult(True, stdout)
-	#except Exception as e:
-	#	return ExecutionResult(False, stdout)
-	"""

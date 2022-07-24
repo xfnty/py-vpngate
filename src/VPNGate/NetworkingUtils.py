@@ -1,3 +1,5 @@
+import logging
+import traceback
 try:
 	import requests
 except Exception:
@@ -24,11 +26,12 @@ def make_request(url: str, verbose=True) -> object:
 		resp = requests.get(url)
 	except Exception as e:
 		if verbose:
-			print(f"Request failed:\n  '{url}'\n  {str(e)}")
+			logging.error(f"Request to '{url}' failed")
+			logging.debug(f"Exception:\n{''.join(traceback.format_exception(e))}")
 		return None
 	if not resp:
 		if verbose:
-			print(f"Request failed:\n  '{url}'\n  status code: {resp.status_code}")
+			logging.error(f"Request to '{url}' failed ({resp.status_code})")
 		return None
 	return resp
 

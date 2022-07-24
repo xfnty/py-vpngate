@@ -1,3 +1,4 @@
+import logging
 import argparse
 from sys import argv
 from .VPNManager import *
@@ -8,12 +9,15 @@ from .FilesystemUtils import *
 
 
 APP_VPN_PROFILE_NAME = 'VPNGate Profile'
+APP_LOG_FILEPATH = './vpngate.log'
 
 
 class VPNGateApp:
 	"""*silence*"""
 
 	def __init__(self):
+		global APP_LOG_FILEPATH
+
 		self.arg_parser = argparse.ArgumentParser(
 			prog='vpngate',
 			description='Parses public VPN lists and gives best VPN suggestions.',
@@ -40,6 +44,8 @@ class VPNGateApp:
 			Any kind of exception
 		"""
 
+		logging.debug('Starting VPNGateApp...')
+
 		if work_dir is not None:
 			self.work_dir = work_dir
 
@@ -49,7 +55,6 @@ class VPNGateApp:
 		self.vpn_manager.init(work_dir)
 
 		if self.args.update_cache or (not self.cache.is_cache_valid() and len(argv) > 1):
-			print('Downloading VPN list...')
 			self.cache.update()
 
 		if self.args.save_config_hostname is not None:
@@ -87,9 +92,11 @@ class VPNGateApp:
 			pass
 
 	def _print_list(self):
+		logging.debug('Requested VPN list')
 		print(*self.cache.vpns, sep='\n')
 
 	def _suggest_best(self):
+		logging.debug('Requested VPN suggestions')
 		print(*best_vpn_by_speed(self.cache.vpns), sep='\n')
 
 	def _connect_best(self, timeout=None):
@@ -99,34 +106,34 @@ class VPNGateApp:
 		profile = None
 		try:
 			for i, vpn in enumerate(best_vpn_by_speed(self.cache.vpns, count=len(self.cache.vpns))):
-				print('\r' + ' '*50 + f"\r[{i}] {vpn.host}: creating profile", end='', flush=True)
+				logging.info(f"creating profile '{vpn.host}'...")
 
 				profile = self.vpn_manager.create_openvpn(
 					config=vpn.config,
 					name='VPNGate Temp Profile')
 
 				if profile is None:
-					print('\r' + ' '*50 + f"\r[{i}] {vpn.host}: invalid profile", flush=True)
+					logging.error(f"invalid profile '{vpn.host}'")
 					continue
 
-				print('\r' + ' '*50 + f"\r[{i}] {vpn.host}: connecting", end='', flush=True)
+				logging.info(f"connecting to '{vpn.host}'")
 				if not self.vpn_manager.connect(profile, timeout=timeout):
-					print('\r' + ' '*50 + f"\r[{i}] {vpn.host}: failed")
+					logging.error(f"connection to '{vpn.host}' failed")
 					continue
 
 				self.vpn_manager.disconnect(profile)
 				self.vpn_manager.remove(profile)
 
 				# Only to rename existing profile
-				print('\r' + ' '*50 + f"\r[{i}] {vpn.host}: established. Finishing", end='', flush=True)
+				logging.info(f"connection to '{vpn.host}' established. Finishing")
 				profile = self.vpn_manager.create_openvpn(
 					config=vpn.config,
 					name=APP_VPN_PROFILE_NAME)
 				if profile is None or not self.vpn_manager.connect(profile, timeout=timeout + 5):
-					print('\r' + ' '*50 + f"\r[{i}] {vpn.host}: something went wrong")
+					logging.error(f"connection to '{vpn.host}' feailed. Something went wrong")
 					continue
 				
-				print('\r' + ' '*50 + f"\r[{i}] {vpn.host}: connected")
+				logging.info(f"connected to '{vpn.host}'")
 				break
 		except KeyboardInterrupt:
 			self.vpn_manager.disconnect(profile)
@@ -138,38 +145,43 @@ class VPNGateApp:
 		if self.cache.save_config(
 				host=host,
 				filepath=filepath):
-			print(f"Saved to '{filepath}'")
+			logging.info(f"Config saved to '{filepath}'")
 
 	def _show_host(self, host: str):
+		logging.debug(f"Requested detailed VPN description for '{host}'")
 		vpn = self.cache.find(host)
 		if vpn != None:
 			vpn.print_description()
+		else:
+			logging.error(f"Could not find VPN entry for '{host}'")
 
 	def _connect(self, host: str, timeout=None):
 		global APP_VPN_PROFILE_NAME
+
+		logging.debug(f"Requested connection to '{host}' (timeout={timeout})")
 
 		timeout = 5 if timeout is None else timeout
 		filepath = host + '.ovpn'
 		vpn = self.cache.find(host=host)
 
 		if vpn is None:
-			print(f"Unknown VPN host '{host}'")
+			logging.error(f"Unknown VPN host '{host}'")
 			return
 
-		print(f"Creating VPN profile '{APP_VPN_PROFILE_NAME}'...")
 		profile = self.vpn_manager.create_openvpn(
 			config=vpn.config, name=APP_VPN_PROFILE_NAME
 		)
 
 		if profile is None:
-			print('Failed')
+			logging.error(f"Failed to create VPN profile '{APP_VPN_PROFILE_NAME}'")
 			return
 
-		print(f"Connecting to '{profile.name}'")
+		logging.info(f"Created VPN profile '{APP_VPN_PROFILE_NAME}'")
+
+		logging.info(f"Connecting to '{profile.name}'...")
 		if self.vpn_manager.connect(profile, timeout=timeout):
-			print('done')
+			logging.info(f"Connected to '{profile.name}'")
 		else:
-			print('failed')
 			self.vpn_manager.disconnect(profile)
 			self.vpn_manager.remove(profile)
 

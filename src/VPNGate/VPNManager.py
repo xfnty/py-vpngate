@@ -1,3 +1,5 @@
+import logging
+import traceback
 from .VPN import *
 from .VPNConfig import *
 from .VPNProfile import *
@@ -6,35 +8,28 @@ from .FilesystemUtils import *
 import os
 
 
-VPNGATE_NMCLI_OUTPUT_FILENAME = '.vpngate_nmcli_output'
-
-
 class VPNManager:
 	"""Wrapper around 'nmcli' utility"""
 
 	def __init__(self):
 		self.work_dir = get_file_dirname(__file__)
-		self._nmcli_log_path = None
-		self._nmcli_log = None
 
 	def init(self, work_dir=None):
-		global VPNGATE_NMCLI_OUTPUT_FILENAME
-		
+		"""
+		No Throw
+		"""
+
 		if work_dir is not None:
 			self.work_dir = work_dir
-		self._nmcli_log_path = os.path.join(work_dir, VPNGATE_NMCLI_OUTPUT_FILENAME)
-		self._nmcli_log = open(self._nmcli_log_path, 'w')
+		
+		logging.debug(f"VPNManager initialized (working directory is '{self.work_dir}')")
 
 	def shutdown(self):
 		"""
 		No Throw
 		"""
 
-		try:
-			self._nmcli_log.close()
-			os.remove(self._nmcli_log_path)
-		except FileNotFoundError:
-			pass
+		logging.debug(f"VPNManager shut down")
 
 	def get_profiles(self) -> [VPNProfile]:
 		"""
@@ -45,6 +40,8 @@ class VPNManager:
 
 		No Throw
 		"""
+
+		logging.debug('Getting system VPN profiles...')
 
 		def parse_stdout(stdout: str) -> [VPNProfile]:
 			vpn_settings_names = []
@@ -63,10 +60,14 @@ class VPNManager:
 
 		execution = exec('nmcli', 'connection', 'show')
 		if not execution.succeded or self._nmcli_error_detected(execution.stdout):
+			logging.error('Failed to get system VPN profiles')
+			logging.debug(f"nmcli output:\n{execution.stdout}")
 			return []
 		try:
 			return parse_stdout(execution.stdout)
-		except Exception:
+		except Exception as e:
+			logging.error('Failed to get system VPN profiles.')
+			logging.debug(f"Exception:\n{traceback.format_exception(e)}")
 			return []
 
 	def get_profile(self, name: str) -> VPNProfile:
@@ -92,6 +93,8 @@ class VPNManager:
 			OSError
 		"""
 
+		logging.debug(f"Creating system VPN profile '{name}'...")
+
 		existing_profile = self.get_profile(name)
 		if existing_profile is not None:
 			self.remove(existing_profile)
@@ -104,6 +107,7 @@ class VPNManager:
 		os.remove(filepath)
 		
 		if not execution.succeded or self._nmcli_error_detected(execution.stdout):
+			logging.error(f"Failed to create system VPN profile '{name}'")
 			return None
 
 		return self.get_profile(name)
@@ -115,8 +119,16 @@ class VPNManager:
 		No Throw
 		"""
 
+		logging.debug(f"Removing system VPN profile '{profile.name}'...")
+
 		execution = exec('nmcli', 'connection', 'delete', profile.uuid)
-		return execution.succeded and not self._nmcli_error_detected(execution.stdout)
+		succeded = execution.succeded and not self._nmcli_error_detected(execution.stdout)
+
+		if not succeded:
+			logging.error(f"Failed to remove system VPN profile '{profile.name}'\n")
+			logging.debug(f"nmcli output:\n{execution.stdout}")
+
+		return succeded
 
 	def connect(self, profile: VPNProfile, timeout=10) -> bool:
 		"""
@@ -127,8 +139,18 @@ class VPNManager:
 
 		No Throw
 		"""
+
+		logging.debug(f"Connecting to system VPN profile '{profile.name}'... (timeout={timeout})")
+
 		execution = exec('nmcli', 'connection', 'up', profile.uuid, timeout=timeout)
-		return execution.succeded and not self._nmcli_error_detected(execution.stdout)
+		succeded = execution.succeded and not self._nmcli_error_detected(execution.stdout)
+
+		if not succeded:
+			logging.error(f"Failed to connect to system VPN profile '{profile.name}'")
+			logging.debug(f"nmcli output:\n{execution.stdout}")
+
+		return succeded
+
 
 	def disconnect(self, profile: VPNProfile) -> bool:
 		"""
@@ -137,8 +159,16 @@ class VPNManager:
 		No Throw
 		"""
 
+		logging.debug(f"Disconnecting system VPN profile '{profile.name}'...")
+
 		execution = exec('nmcli', 'connection', 'down', profile.uuid)
-		return execution.succeded and not self._nmcli_error_detected(execution.stdout)
+		succeded = execution.succeded and not self._nmcli_error_detected(execution.stdout)
+
+		if not succeded:
+			logging.error(f"Failed to disconnect system VPN profile '{profile.name}'\n")
+			logging.debug(f"nmcli output:\n{execution.stdout}")
+
+		return succeded
 
 	def _nmcli_error_detected(self, stdout: str) -> bool:
 		return 'Error' in stdout
