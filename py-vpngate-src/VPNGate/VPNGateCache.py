@@ -82,13 +82,11 @@ class VPNGateCache:
 		logging.info(f"Updating cache...")
 
 		if not self._download_cache():
-			return
+			logging.error('Failed to download cache')
 		elif not self._load_cache_entries():
 			logging.error('Failed to load cache entries')
 		elif not self.is_cache_valid():
 			logging.error('Cache is invalid after update')
-		else:
-			logging.debug('Cache updated')
 
 	def save_config(self, host: str, filepath: str) -> bool:
 		"""
@@ -109,7 +107,7 @@ class VPNGateCache:
 				os.remove(filepath)
 			except FileNotFoundError:
 				pass
-			logging.error(f"Failed to save config for host '{host}' to '{filepath}'")
+			logging.debug(f"Failed to save config for host '{host}' to '{filepath}'")
 			return False
 		return True
 
@@ -160,7 +158,7 @@ class VPNGateCache:
 			with open(self.cache_filepath, 'w') as file:
 				file.write(text)
 		except Exception as e:
-			logging.error(f"Failed to process response content")
+			logging.debug(f"Failed to process response content")
 			logging.debug(f"Exception:\n{traceback.format_exception(e)}")
 			return False
 

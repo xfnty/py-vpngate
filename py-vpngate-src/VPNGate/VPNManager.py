@@ -60,13 +60,13 @@ class VPNManager:
 
 		execution = exec('nmcli', 'connection', 'show')
 		if not execution.succeded or self._nmcli_error_detected(execution.stdout):
-			logging.error('Failed to get system VPN profiles')
+			logging.debug('Failed to get system VPN profiles')
 			logging.debug(f"nmcli output:\n{execution.stdout}")
 			return []
 		try:
 			return parse_stdout(execution.stdout)
 		except Exception as e:
-			logging.error('Failed to get system VPN profiles.')
+			logging.debug('Failed to get system VPN profiles.')
 			logging.debug(f"Exception:\n{traceback.format_exception(e)}")
 			return []
 
@@ -107,7 +107,7 @@ class VPNManager:
 		os.remove(filepath)
 		
 		if not execution.succeded or self._nmcli_error_detected(execution.stdout):
-			logging.error(f"Failed to create system VPN profile '{name}'")
+			logging.debug(f"Failed to create system VPN profile '{name}'")
 			return None
 
 		return self.get_profile(name)
@@ -125,7 +125,7 @@ class VPNManager:
 		succeded = execution.succeded and not self._nmcli_error_detected(execution.stdout)
 
 		if not succeded:
-			logging.error(f"Failed to remove system VPN profile '{profile.name}'\n")
+			logging.debug(f"Failed to remove system VPN profile '{profile.name}'\n")
 			logging.debug(f"nmcli output:\n{execution.stdout}")
 
 		return succeded
@@ -146,7 +146,7 @@ class VPNManager:
 		succeded = execution.succeded and not self._nmcli_error_detected(execution.stdout)
 
 		if not succeded:
-			logging.error(f"Failed to connect to system VPN profile '{profile.name}'")
+			logging.debug(f"Failed to connect to system VPN profile '{profile.name}'")
 			logging.debug(f"nmcli output:\n{execution.stdout}")
 
 		return succeded
@@ -165,7 +165,7 @@ class VPNManager:
 		succeded = execution.succeded and not self._nmcli_error_detected(execution.stdout)
 
 		if not succeded:
-			logging.error(f"Failed to disconnect system VPN profile '{profile.name}'\n")
+			logging.debug(f"Failed to disconnect system VPN profile '{profile.name}'\n")
 			logging.debug(f"nmcli output:\n{execution.stdout}")
 
 		return succeded
