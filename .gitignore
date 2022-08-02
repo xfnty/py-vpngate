@@ -1,8 +1,8 @@
 # Files
+*.log
 .vpngate_cache*
 .vpngate_nmcli_out
 test.py
-_old/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
