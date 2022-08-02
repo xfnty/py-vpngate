@@ -26,10 +26,10 @@ class VPNGateApp:
 		self.arg_parser.add_argument('-u', dest='update_cache', action='store_true', help=f"update VPN list cache")
 		self.arg_parser.add_argument('-b', dest='suggest_best', action='store_true', help=f"show VPNs with highest speed")
 		self.arg_parser.add_argument('-cb', dest='connect_best', action='store_true', help=f"find best VPN and connect to it. You can always press Ctrl+C to abort the operation")
-		self.arg_parser.add_argument('-c', metavar='HOSTNAME', dest='hostname_to_connect', const=None, help=f"connect to VPN host")
+		self.arg_parser.add_argument('-c', metavar='HOSTNAME', dest='hostname_to_connect', const=None, help=f"connect to the VPN host")
 		self.arg_parser.add_argument('-p', metavar='HOSTNAME', dest='hostname_to_show', const=None, help=f"show more information about specified host")
-		self.arg_parser.add_argument('-s', metavar='HOSTNAME', dest='save_config_hostname', const=None, help=f"save OpenVPN config for given server")
-		self.arg_parser.add_argument('-t', metavar='TIMEOUT', dest='timeout', type=int, help=f"specify timeout for connect commands")
+		self.arg_parser.add_argument('-s', metavar='HOSTNAME', dest='save_config_hostname', const=None, help=f"save OpenVPN config for the given server")
+		self.arg_parser.add_argument('-t', metavar='TIMEOUT', dest='timeout', type=int, help=f"specify a timeout for the commands")
 		self.args = None
 		self.work_dir = get_file_dirname(__file__)
 
