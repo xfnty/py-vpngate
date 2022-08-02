@@ -60,6 +60,13 @@ class VPN:
 		print('{:<15} {}'.format('Operator:', self.operator))
 		print('{:<15} {}'.format('Description:', self.description))
 
+	def dump(self):
+		config_base64 = bytes.decode(base64.b64encode(bytes(self.config.text, encoding='utf-8')), encoding='utf-8')
+		return f"{self.host},{self.ip},0,{self.ping},{self.speed}," +\
+			f"{self.country_long},{self.country_short},{self.sessions},{self.uptime},," +\
+			f"{self.traffic},,{self.operator},," +\
+			f"{config_base64}"
+
 	def __str__(self):
 		return "{:<20}- {} {:>4} ms {:>12}ps {:>4} sessions".format(
 			self.host,

@@ -78,7 +78,7 @@ class VPNGateApp:
 		elif self.args.remove_profile:
 			self._remove_profile()
 
-		else:
+		elif len(argv) == 1:
 			self.arg_parser.print_usage()
 
 	def close(self):

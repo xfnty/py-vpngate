@@ -12,6 +12,7 @@ from .FilesystemUtils import *
 
 VPNGATE_API_URL = 'https://www.vpngate.net/api/iphone'
 VPNGATE_CACHE_FILENAME = '.vpngate_cache'
+VPNGATE_TEMP_CACHE_FILENAME = '.vpngate_temp_cache'
 
 
 class VPNGateCache:
@@ -72,21 +73,61 @@ class VPNGateCache:
 				if contents.isspace() or contents == '':
 					return False
 		except Exception as e:
-			# raise e
 			return False
 		return True
 
 	def update(self):
 		"""Downloads a new cache."""
 
+		global VPNGATE_TEMP_CACHE_FILENAME, VPNGATE_CACHE_FILENAME
+
 		logging.info(f"Updating cache...")
 
-		if not self._download_cache():
-			logging.error('Failed to download cache')
-		elif not self._load_cache_entries():
-			logging.error('Failed to load cache entries')
-		elif not self.is_cache_valid():
-			logging.error('Cache is invalid after update')
+		if not self.is_cache_valid() or not self._load_cache_entries():
+			# Cache does not exists, download a new one
+			if not self._download_cache():
+				logging.error('Failed to download cache')
+				return
+			if not self.is_cache_valid():
+				logging.error('Cache is invalid after update')
+			elif not self._load_cache_entries():
+				logging.error('Failed to load cache entries')
+			logging.info(f"Downloaded {len(self.vpns)} new VPN profiles")
+		else:
+			# Load existing cache and add new entries from the downloaded one
+			if not self._download_cache(VPNGATE_TEMP_CACHE_FILENAME):
+				logging.error('Old cache exists but failed to download a new one')
+				return
+
+			new_vpns = []
+			if not self._load_cache_entries(new_vpns, VPNGATE_TEMP_CACHE_FILENAME):
+				logging.error('Old cache exists but failed to load a new one')
+
+			vpns_to_add = []
+			vpn_hostnames = [vpn.host for vpn in self.vpns]
+			for new in new_vpns:
+				if new.host not in vpn_hostnames:
+					vpns_to_add.append(new)
+			self.vpns.extend(vpns_to_add)
+
+			with open(os.path.join(self.work_dir, VPNGATE_CACHE_FILENAME), 'a') as cache:
+				for vpn in vpns_to_add:
+					cache.write(vpn.dump() + '\n')
+
+			logging.info(f"Downloaded {len(vpns_to_add)} new VPN profiles")
+
+			try:
+				os.remove(VPNGATE_TEMP_CACHE_FILENAME)
+			except Exception:
+				pass
+
+
+		# if not self._download_cache():
+		# 	logging.error('Failed to download cache')
+		# elif not self._load_cache_entries():
+		# 	logging.error('Failed to load cache entries')
+		# elif not self.is_cache_valid():
+		# 	logging.error('Cache is invalid after update')
 
 	def save_config(self, host: str, filepath: str) -> bool:
 		"""
@@ -122,21 +163,29 @@ class VPNGateCache:
 		
 		return next((v for v in self.vpns if v.host == host), None)
 
-	def _load_cache_entries(self) -> bool:
+	def _load_cache_entries(self, vpnlist=None, filename=None) -> bool:
 		"""
 		Reads cache and loads VPNs into 'self.vpns' list.
 
 		No Throw
 		"""
 
+		if filename is None:
+			filename = os.path.join(self.work_dir, self.cache_filepath)
+
+		vpns = []
 		try:
-			with open(self.cache_filepath) as file:
-				self.vpns = [VPN.from_cache_entry(e) for e in list(csv.DictReader(file))]
+			with open(filename) as file:
+				vpns = [VPN.from_cache_entry(e) for e in list(csv.DictReader(file))]
+				if vpnlist is None:
+					self.vpns = vpns
+				else:
+					vpnlist.extend(vpns)
 		except Exception as e:
 			return False
 		return True
 
-	def _download_cache(self) -> bool:
+	def _download_cache(self, filename=None) -> bool:
 		"""
 		Downloads and saves VPNGate list locally.
 
@@ -147,7 +196,10 @@ class VPNGateCache:
 
 		logging.debug(f"Downloading cache from '{VPNGATE_API_URL}'")
 
-		resp = make_request(VPNGATE_API_URL, )
+		if filename is None:
+			filename = os.path.join(self.work_dir, self.cache_filepath)
+
+		resp = make_request(VPNGATE_API_URL)
 
 		if resp is None:
 			return False
@@ -155,12 +207,16 @@ class VPNGateCache:
 		try:
 			text = bytes.decode(resp.content, encoding='utf-8')
 			text = text[text.index('\n')+2:text.rindex('*')-1] # Remove '*vpn_servers\n#' and '*\n' at the end
-			with open(self.cache_filepath, 'w') as file:
+			with open(filename, 'w') as file:
 				file.write(text)
 		except Exception as e:
 			logging.debug(f"Failed to process response content")
 			logging.debug(f"Exception:\n{traceback.format_exception(e)}")
+			try:
+				os.remove(filename)
+			except Exception:
+				pass
 			return False
 
-		logging.debug(f"Cache saved to '{self.cache_filepath}'")
+		logging.debug(f"Cache saved to '{filename}'")
 		return True
