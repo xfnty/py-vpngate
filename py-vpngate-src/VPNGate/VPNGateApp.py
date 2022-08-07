@@ -54,6 +54,10 @@ class VPNGateApp:
 		self.cache.init(work_dir, dont_update=True)
 		self.vpn_manager.init(work_dir)
 
+		if self.args.remove_profile:
+			self._remove_profile()
+			return
+
 		if self.args.update_cache or (not self.cache.is_cache_valid() and len(argv) > 1):
 			self.cache.update()
 
@@ -74,9 +78,6 @@ class VPNGateApp:
 
 		elif self.args.hostname_to_connect is not None:
 			self._connect(self.args.hostname_to_connect, self.args.timeout)
-
-		elif self.args.remove_profile:
-			self._remove_profile()
 
 		elif len(argv) == 1:
 			self.arg_parser.print_usage()
