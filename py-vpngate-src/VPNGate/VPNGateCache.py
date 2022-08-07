@@ -114,7 +114,10 @@ class VPNGateCache:
 				for vpn in vpns_to_add:
 					cache.write(vpn.dump() + '\n')
 
-			logging.info(f"Downloaded {len(vpns_to_add)} new VPN profiles")
+			logging.info(
+				f"Downloaded {len(vpns_to_add)} new VPN profiles. " +\
+				f"{len(self.vpns)} in total"
+			)
 
 			try:
 				os.remove(VPNGATE_TEMP_CACHE_FILENAME)
