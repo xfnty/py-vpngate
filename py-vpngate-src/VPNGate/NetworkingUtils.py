@@ -1,12 +1,6 @@
 import logging
 import traceback
-try:
-	import requests
-except Exception:
-	print(f"Module 'requests' is not installed")
-	print(f"You can install it by running")
-	print(f"pip install requests")
-	quit()
+import urllib.request
 
 
 def make_request(url: str, verbose=True) -> object:
@@ -21,19 +15,21 @@ def make_request(url: str, verbose=True) -> object:
 	No Throw
 	"""
 
-	resp = None
+	req = None
+	load = None
 	try:
-		resp = requests.get(url)
+		req = urllib.request.urlopen(url)
+		if req is None:
+			return None
+		load = req.read()
 	except Exception as e:
 		if verbose:
 			logging.error(f"Request to '{url}' failed")
+			if req is not None:
+				logging.debug(f"Request details: status={req.status} reason={req.reason}")
 			logging.debug(f"Exception:\n{''.join(traceback.format_exception(e))}")
 		return None
-	if not resp:
-		if verbose:
-			logging.error(f"Request to '{url}' failed ({resp.status_code})")
-		return None
-	return resp
+	return load
 
 
 def ping(addr: str, count=1, timeout=1) -> float:
