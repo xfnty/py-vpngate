@@ -208,7 +208,7 @@ class VPNGateCache:
 			return False
 
 		try:
-			text = bytes.decode(resp.content, encoding='utf-8')
+			text = bytes.decode(resp, encoding='utf-8')
 			text = text[text.index('\n')+2:text.rindex('*')-1] # Remove '*vpn_servers\n#' and '*\n' at the end
 			with open(filename, 'w') as file:
 				file.write(text)
