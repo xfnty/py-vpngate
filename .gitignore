@@ -3,6 +3,7 @@
 .vpngate_cache
 .vpngate_temp_cache
 .vpngate_nmcli_out
+*.ovpn
 test.py
 
 # Byte-compiled / optimized / DLL files

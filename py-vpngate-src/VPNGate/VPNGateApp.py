@@ -1,3 +1,4 @@
+import os
 import logging
 import argparse
 from sys import argv
@@ -146,7 +147,7 @@ class VPNGateApp:
 			print()
 
 	def _save_config(self, host: str):
-		filepath = os.path.join(self.work_dir, host + '.ovpn')
+		filepath = os.path.join(os.getcwd(), host + '.ovpn')
 		if self.cache.save_config(
 				host=host,
 				filepath=filepath):
