@@ -212,8 +212,6 @@ class VPNGateApp:
 		_ch.setFormatter(_console_formatter)
 
 		log_path = os.path.join(self.work_dir, APP_LOG_FILENAME)
-		print(f"Log path: {log_path}")
-
 		_fh = logging.FileHandler(log_path, mode='a')
 		_fh.setLevel(logging.NOTSET)
 		_fh.setFormatter(_file_formatter)
