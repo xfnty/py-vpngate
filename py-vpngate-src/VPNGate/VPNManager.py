@@ -1,5 +1,6 @@
 import logging
 import traceback
+import enum
 from .VPN import *
 from .VPNConfig import *
 from .VPNProfile import *
@@ -11,7 +12,10 @@ import os
 class VPNManager:
 	"""Wrapper around 'nmcli' utility"""
 
+	
+
 	def __init__(self):
+		self.backend_id = BackendId.NMCLI
 		self.work_dir = get_file_dirname(__file__)
 
 	def init(self, work_dir=None):
@@ -30,6 +34,9 @@ class VPNManager:
 		"""
 
 		logging.debug(f"VPNManager shut down")
+
+	def choose_backend(self, backend_id: Backend) -> bool:
+		return False
 
 	def get_profiles(self) -> [VPNProfile]:
 		"""
