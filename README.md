@@ -30,6 +30,8 @@ and attempt to connect to best VPN by host speed specified in downloaded CSV lis
 > try to [downloading](https://github.com/ts-vadim/py-vpngate/releases) 
 > VPN list from releases page 
 > and later updating it *after* connecting to the VPN.
+> 
+> Also the error message could be found in `/usr/local/bin/py-vpngate-src/vpngate.log`
 
 **More features**
 
