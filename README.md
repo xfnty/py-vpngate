@@ -1,12 +1,6 @@
 # PyVPNGate
 
-Simple script for parsing public VPNGate VPN lists and connecting to available VPN servers
-
-## Available for
-| Linux   | :heavy_check_mark: |
-| :-----: | :----------------: |
-| Windows | :clock10:          |
-| Mac OS  | :x:                |
+Simple script for parsing public VPNGate VPN lists and connecting to available VPN servers.
 
 Right now the script uses GNOME's Network Manager to make connections so 
 it should work fine everywhere if there is `nmcli` utility.
