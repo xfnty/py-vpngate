@@ -21,7 +21,7 @@ cd py-vpngate
 bash install.sh
 ```
 
-This will copy `py-vpngate-src` and `vpngate` script to `/usr/local/bin` folder.
+This will copy the script to `/usr/local/bin` folder.
 
 **Run the script**
 
@@ -33,7 +33,8 @@ This command will download VPN list from [VPNGate](https://www.vpngate.net/api/i
 and attempt to connect to best VPN by host speed specified in downloaded CSV list.
 
 > If you see message like `Request to ... failed`
-> try to [downloading]() VPN list from releases page 
+> try to [downloading](https://github.com/ts-vadim/py-vpngate/releases) 
+> VPN list from releases page 
 > and later updating it *after* connecting to the VPN.
 
 **More features**
