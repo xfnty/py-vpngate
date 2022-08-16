@@ -135,7 +135,7 @@ class VPNGateApp:
 		profile = None
 		try:
 			for i, vpn in enumerate(best_vpn_by_speed(self.cache.vpns, count=len(self.cache.vpns))):
-				profile = self.vpn_manager.create_openvpn(
+				profile = self.vpn_manager.create_profile(
 					config=vpn.config,
 					name='VPNGate Temp Profile'
 				)
@@ -153,7 +153,7 @@ class VPNGateApp:
 
 				# Only to rename existing profile
 				logging.info(f"connection to '{vpn.host}' established. Finishing")
-				profile = self.vpn_manager.create_openvpn(
+				profile = self.vpn_manager.create_profile(
 					config=vpn.config,
 					name=APP_VPN_PROFILE_NAME)
 				if profile is None or not self.vpn_manager.connect(profile, timeout=timeout + 5):
@@ -206,6 +206,7 @@ class VPNGateApp:
 		else:
 			self.vpn_manager.disconnect(profile)
 			self.vpn_manager.remove(profile)
+			logging.error(f"Failed")
 
 	def _remove_profile(self):
 		global APP_VPN_PROFILE_NAME
