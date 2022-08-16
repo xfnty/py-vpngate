@@ -15,15 +15,13 @@ from .VPNBackendOpenVPN import *
 
 
 APP_VPN_PROFILE_NAME = 'VPNGate Profile'
-APP_LOG_FILEPATH = './vpngate.log'
+APP_LOG_FILENAME = 'vpngate.log'
 
 
 class VPNGateApp:
 	"""*silence*"""
 
 	def __init__(self):
-		global APP_LOG_FILEPATH
-
 		self.arg_parser = argparse.ArgumentParser(
 			prog='vpngate',
 			description='Parses public VPN lists and gives best VPN suggestions.',
@@ -53,12 +51,18 @@ class VPNGateApp:
 
 		arg_str = ' '.join([os.path.basename(argv[0])] + argv[1:])
 		logging.debug(f"##### App start: '{arg_str}'")
-
+    
 		if work_dir is not None:
 			self.work_dir = work_dir
+	
+		self._setup_logging()
+
+		logging.debug('### Starting VPNGateApp... ###')
 
 		if not self._init_stuff():
 			return
+
+		logging.debug(f"App started (working directory is '{self.work_dir}')")
 
 		if self.args.remove_profile:
 			self._remove_profile()
@@ -168,7 +172,7 @@ class VPNGateApp:
 			print()
 
 	def _save_config(self, host: str):
-		filepath = os.path.join(self.work_dir, host + '.ovpn')
+		filepath = os.path.join(os.getcwd(), host + '.ovpn')
 		if self.cache.save_config(
 				host=host,
 				filepath=filepath):
@@ -217,3 +221,23 @@ class VPNGateApp:
 
 		self.vpn_manager.disconnect(profile)
 		self.vpn_manager.remove(profile)
+
+	def _setup_logging(self):
+		global APP_LOG_FILENAME
+
+		_console_formatter = logging.Formatter('%(message)s')
+		_file_formatter = logging.Formatter('(%(asctime)s) %(levelname)s: %(message)s')
+
+		_ch = logging.StreamHandler()
+		_ch.setLevel(logging.INFO)
+		_ch.setFormatter(_console_formatter)
+
+		log_path = os.path.join(self.work_dir, APP_LOG_FILENAME)
+		_fh = logging.FileHandler(log_path, mode='a')
+		_fh.setLevel(logging.NOTSET)
+		_fh.setFormatter(_file_formatter)
+
+		logging.basicConfig(
+			level=logging.DEBUG,
+			handlers=[_ch, _fh]
+		)
