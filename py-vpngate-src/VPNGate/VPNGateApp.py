@@ -12,6 +12,7 @@ from .FilesystemUtils import *
 
 from .VPNBackendNmcli import *
 from .VPNBackendOpenVPN import *
+from .VPNBackendPowershell import *
 
 
 APP_VPN_PROFILE_NAME = 'VPNGate Profile'
@@ -21,10 +22,27 @@ APP_LOG_FILENAME = 'vpngate.log'
 class VPNGateApp:
 	"""*silence*"""
 
-	def __init__(self):
+	def __init__(self, work_dir=None):
+		self.log_path = None
+		self.work_dir = get_file_dirname(__file__)
+		if work_dir is not None:
+			self.work_dir = work_dir
+
+		self._setup_logging()
+
+		self.backend_bindings = {
+			'nmcli': VPNBackendNmcli,
+			'powersh': VPNBackendPowershell,
+			'ovpn': VPNBackendOpenVPN,
+			None: None
+		}
+
+		backends_str = ', '.join([f"'{k}'" for k in self.backend_bindings if k is not None])
+
 		self.arg_parser = argparse.ArgumentParser(
 			prog='vpngate',
 			description='Parses public VPN lists and gives best VPN suggestions.',
+			epilog=f"Log file is saved to '{self.log_path}'"
 		)
 		self.arg_parser.add_argument('-l', dest='print_list', action='store_true', help=f"list cached VPN servers")
 		self.arg_parser.add_argument('-u', dest='update_cache', action='store_true', help=f"update VPN list cache")
@@ -35,34 +53,20 @@ class VPNGateApp:
 		self.arg_parser.add_argument('-s', metavar='HOSTNAME', dest='save_config_hostname', const=None, help=f"save OpenVPN config for the given server")
 		self.arg_parser.add_argument('-t', metavar='TIMEOUT', dest='timeout', type=int, help=f"specify a timeout for the commands")
 		self.arg_parser.add_argument('-r', dest='remove_profile', action='store_true', help=f"Remove '{APP_VPN_PROFILE_NAME}' from VPN settings")
+		self.arg_parser.add_argument('--use', metavar='BACKEND', dest='backend', const=None, help=f"Specify backend for connecting to VPN. Avavilable backends are {backends_str}. OS Specific is used by default.")
 		self.args = None
-		self.work_dir = get_file_dirname(__file__)
-
+		
 		self.cache = VPNGateCache()
 		self.vpn_manager = VPNManager()
 
-	def run(self, work_dir=None):
-		"""
-		Launch the app.
-
-		Throws:
-			Any kind of exception
-		"""
-
+	def run(self):
 		arg_str = ' '.join([os.path.basename(argv[0])] + argv[1:])
 		logging.debug(f"##### App start: '{arg_str}'")
-    
-		if work_dir is not None:
-			self.work_dir = work_dir
-	
-		self._setup_logging()
-
-		logging.debug('### Starting VPNGateApp... ###')
 
 		if not self._init_stuff():
 			return
 
-		logging.debug(f"App started (working directory is '{self.work_dir}')")
+		logging.debug(f"CWD is '{self.work_dir}'")
 
 		if self.args.remove_profile:
 			self._remove_profile()
@@ -120,7 +124,11 @@ class VPNGateApp:
 			logging.error("Failed to initialize cache")
 			return False
 
-		if not self.vpn_manager.init(work_dir=self.work_dir):
+		if self.args.backend not in self.backend_bindings:
+			logging.error(f"Unknown VPN backend '{self.args.backend}'. See help message for available backends.")
+			return False
+		backend_instance = self.backend_bindings[self.args.backend]()
+		if not self.vpn_manager.init(backend=backend_instance, work_dir=self.work_dir):
 			logging.error("Failed to initialize VPN manager")
 			return False
 
@@ -226,18 +234,18 @@ class VPNGateApp:
 		global APP_LOG_FILENAME
 
 		_console_formatter = logging.Formatter('%(message)s')
-		_file_formatter = logging.Formatter('(%(asctime)s) %(levelname)s: %(message)s')
+		_file_formatter = logging.Formatter('%(message)s')
 
 		_ch = logging.StreamHandler()
 		_ch.setLevel(logging.INFO)
 		_ch.setFormatter(_console_formatter)
 
-		log_path = os.path.join(self.work_dir, APP_LOG_FILENAME)
-		_fh = logging.FileHandler(log_path, mode='a')
+		self.log_path = os.path.join(self.work_dir, APP_LOG_FILENAME)
+		_fh = logging.FileHandler(self.log_path, mode='w')
 		_fh.setLevel(logging.NOTSET)
 		_fh.setFormatter(_file_formatter)
 
 		logging.basicConfig(
-			level=logging.DEBUG,
+			level=logging.NOTSET,
 			handlers=[_ch, _fh]
 		)

@@ -8,8 +8,8 @@ from VPNGate.FormatUtils import *
 
 if __name__ == '__main__':
 	try:
-		app = VPNGateApp()
-		app.run(work_dir=get_file_dirname(__file__))
+		app = VPNGateApp(work_dir=get_file_dirname(__file__))
+		app.run()
 	except Exception as e:
 		app.close()
 		logging.critical('Unhandled exception:\n' + '\n'.join(traceback.format_exception(e)))
