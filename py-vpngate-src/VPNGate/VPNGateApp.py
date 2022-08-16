@@ -127,7 +127,7 @@ class VPNGateApp:
 		if self.args.backend not in self.backend_bindings:
 			logging.error(f"Unknown VPN backend '{self.args.backend}'. See help message for available backends.")
 			return False
-		backend_instance = self.backend_bindings[self.args.backend]()
+		backend_instance = None if self.args.backend is None else self.backend_bindings[self.args.backend]()
 		if not self.vpn_manager.init(backend=backend_instance, work_dir=self.work_dir):
 			logging.error("Failed to initialize VPN manager")
 			return False
