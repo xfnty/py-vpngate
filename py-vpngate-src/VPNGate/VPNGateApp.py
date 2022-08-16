@@ -1,12 +1,17 @@
 import os
+import sys
 import logging
 import argparse
+import traceback
 from sys import argv
 from .VPNManager import *
 from .VPNGateCache import *
 from .VPNSuggestions import *
 from .FormatUtils import *
 from .FilesystemUtils import *
+
+from .VPNBackendNmcli import *
+from .VPNBackendOpenVPN import *
 
 
 APP_VPN_PROFILE_NAME = 'VPNGate Profile'
@@ -44,6 +49,9 @@ class VPNGateApp:
 			Any kind of exception
 		"""
 
+		arg_str = ' '.join([os.path.basename(argv[0])] + argv[1:])
+		logging.debug(f"##### App start: '{arg_str}'")
+    
 		if work_dir is not None:
 			self.work_dir = work_dir
 	
@@ -51,9 +59,8 @@ class VPNGateApp:
 
 		logging.debug('### Starting VPNGateApp... ###')
 
-		self.args = self.arg_parser.parse_args()
-		self.cache.init(work_dir, dont_update=True)
-		self.vpn_manager.init(work_dir)
+		if not self._init_stuff():
+			return
 
 		logging.debug(f"App started (working directory is '{self.work_dir}')")
 
@@ -85,6 +92,7 @@ class VPNGateApp:
 		elif len(argv) == 1:
 			self.arg_parser.print_usage()
 
+
 	def close(self):
 		"""
 		Close the app.
@@ -98,23 +106,40 @@ class VPNGateApp:
 		except Exception:
 			pass
 
+		logging.debug(f"### closed")
+
+	def _init_stuff(self) -> bool:
+		try:
+			self.args = self.arg_parser.parse_args()
+		except Exception as e:
+			logging.error(f"Failed to parse arguments")
+			logging.debug(f"Exception:\n{traceback.format_exception(e)}")
+			return False
+
+		if not self.cache.init(work_dir=self.work_dir, dont_update=True):
+			logging.error("Failed to initialize cache")
+			return False
+
+		if not self.vpn_manager.init(work_dir=self.work_dir):
+			logging.error("Failed to initialize VPN manager")
+			return False
+
+		return True
+
 	def _print_list(self):
-		logging.debug('=== Requested VPN list ===')
 		print(*self.cache.vpns, sep='\n')
 
 	def _suggest_best(self):
-		logging.debug('=== Requested VPN suggestions ===')
 		print(*best_vpn_by_speed(self.cache.vpns), sep='\n')
 
 	def _connect_best(self, timeout=None):
 		global APP_VPN_PROFILE_NAME
 
-		logging.debug(f"=== Requested best VPN (timeout={timeout}) ===")
 		timeout = 5 if timeout is None else timeout
 		profile = None
 		try:
 			for i, vpn in enumerate(best_vpn_by_speed(self.cache.vpns, count=len(self.cache.vpns))):
-				profile = self.vpn_manager.create_openvpn(
+				profile = self.vpn_manager.create_profile(
 					config=vpn.config,
 					name='VPNGate Temp Profile'
 				)
@@ -132,7 +157,7 @@ class VPNGateApp:
 
 				# Only to rename existing profile
 				logging.info(f"connection to '{vpn.host}' established. Finishing")
-				profile = self.vpn_manager.create_openvpn(
+				profile = self.vpn_manager.create_profile(
 					config=vpn.config,
 					name=APP_VPN_PROFILE_NAME)
 				if profile is None or not self.vpn_manager.connect(profile, timeout=timeout + 5):
@@ -154,7 +179,6 @@ class VPNGateApp:
 			logging.info(f"Config saved to '{filepath}'")
 
 	def _show_host(self, host: str):
-		logging.debug(f"=== Requested detailed VPN description for '{host}' ===")
 		vpn = self.cache.find(host)
 		if vpn != None:
 			vpn.print_description()
@@ -164,8 +188,6 @@ class VPNGateApp:
 	def _connect(self, host: str, timeout=None):
 		global APP_VPN_PROFILE_NAME
 
-		logging.debug(f"=== Requested connection to '{host}' (timeout={timeout}) ===")
-
 		timeout = 5 if timeout is None else timeout
 		filepath = host + '.ovpn'
 		vpn = self.cache.find(host=host)
@@ -174,7 +196,7 @@ class VPNGateApp:
 			logging.error(f"Unknown VPN host '{host}'")
 			return
 
-		profile = self.vpn_manager.create_openvpn(
+		profile = self.vpn_manager.create_profile(
 			config=vpn.config, name=APP_VPN_PROFILE_NAME
 		)
 
@@ -188,15 +210,13 @@ class VPNGateApp:
 		else:
 			self.vpn_manager.disconnect(profile)
 			self.vpn_manager.remove(profile)
+			logging.error(f"Failed")
 
 	def _remove_profile(self):
 		global APP_VPN_PROFILE_NAME
 
-		logging.debug(f"=== Requested remove default profile ===")
-
 		profile = self.vpn_manager.get_profile(APP_VPN_PROFILE_NAME)
 		if profile is None:
-			logging.error(f"Profile '{APP_VPN_PROFILE_NAME}' not found")
 			return
 
 		self.vpn_manager.disconnect(profile)

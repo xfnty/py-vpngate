@@ -25,7 +25,7 @@ class VPNGateCache:
 		self.cache_filepath = None
 		self.vpns = None
 
-	def init(self, work_dir=None, dont_update=False):
+	def init(self, work_dir: str=None, dont_update: bool=False) -> bool:
 		"""
 		Checks whether the cache is valid and if not downloads a new one.
 
@@ -33,7 +33,7 @@ class VPNGateCache:
 			dont_update: do not download cache if it doesn't exist
 
 		Throws:
-			Any kind of exception
+			Usually don't
 		"""
 
 		if work_dir is not None:
@@ -42,12 +42,15 @@ class VPNGateCache:
 		self.vpns = []
 
 		if not dont_update and not self.is_cache_valid():
-			self._download_cache()
+			if not self._download_cache():
+				return False
+
 		self._load_cache_entries()
 
 		logging.debug(f"Cache manager initialized (working directory is '{self.work_dir}')")
+		return True
 
-	def shutdown(self):
+	def shutdown(self) -> None:
 		"""No Throw"""
 
 		try:
@@ -81,17 +84,22 @@ class VPNGateCache:
 
 		global VPNGATE_TEMP_CACHE_FILENAME, VPNGATE_CACHE_FILENAME
 
-		logging.info(f"Updating cache...")
+		logging.debug(f"Updating cache...")
 
 		if not self.is_cache_valid() or not self._load_cache_entries():
 			# Cache does not exists, download a new one
 			if not self._download_cache():
 				logging.error('Failed to download cache')
 				return
+
 			if not self.is_cache_valid():
 				logging.error('Cache is invalid after update')
+				return
+
 			elif not self._load_cache_entries():
 				logging.error('Failed to load cache entries')
+				return
+
 			logging.info(f"Downloaded {len(self.vpns)} new VPN profiles")
 		else:
 			# Load existing cache and add new entries from the downloaded one
@@ -122,15 +130,7 @@ class VPNGateCache:
 			try:
 				os.remove(VPNGATE_TEMP_CACHE_FILENAME)
 			except Exception:
-				pass
-
-
-		# if not self._download_cache():
-		# 	logging.error('Failed to download cache')
-		# elif not self._load_cache_entries():
-		# 	logging.error('Failed to load cache entries')
-		# elif not self.is_cache_valid():
-		# 	logging.error('Cache is invalid after update')
+				logging.debug(f"Failed to remove '{VPNGATE_TEMP_CACHE_FILENAME}'")
 
 	def save_config(self, host: str, filepath: str) -> bool:
 		"""
@@ -140,9 +140,12 @@ class VPNGateCache:
 		No Throw
 		"""
 
+		logging.debug(f"Saving config for '{host}' to '{filepath}' ...")
+
 		try:
 			vpn = self.find(host=host)
 			if vpn is None:
+				logging.debug(f"Could not find host '{host}'")
 				return False
 			vpn.config.save(filepath)
 			logging.debug(F"Saved OpenVPN config for host '{host}' to '{filepath}'")
@@ -150,9 +153,11 @@ class VPNGateCache:
 			try:
 				os.remove(filepath)
 			except FileNotFoundError:
-				pass
+				logging.debug(f"Failed to remove '{filepath}'")
 			logging.debug(f"Failed to save config for host '{host}' to '{filepath}'")
 			return False
+
+		logging.debug(f"Config saved to '{filepath}'")
 		return True
 
 	def find(self, host: str) -> VPN:
@@ -185,6 +190,7 @@ class VPNGateCache:
 				else:
 					vpnlist.extend(vpns)
 		except Exception as e:
+			logging.debug(f"Failed to load cache. Exception:\n{''.join(traceback.format_exception(e))}")
 			return False
 		return True
 
@@ -205,6 +211,7 @@ class VPNGateCache:
 		resp = make_request(VPNGATE_API_URL)
 
 		if resp is None:
+			logging.debug(f"Response is None")
 			return False
 
 		try:
@@ -218,7 +225,7 @@ class VPNGateCache:
 			try:
 				os.remove(filename)
 			except Exception:
-				pass
+				logging.debug(f"Failed to remove '{filename}'")
 			return False
 
 		logging.debug(f"Cache saved to '{filename}'")
