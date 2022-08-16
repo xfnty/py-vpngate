@@ -5,6 +5,8 @@ Simple script for parsing public VPNGate VPN lists and connecting to available V
 Right now the script uses GNOME's Network Manager to make connections so 
 it should work fine everywhere if there is `nmcli` utility.
 
+However support for connecting using **OpenVPN** and **PowerShell** will be added soon.
+
 ## Usage
 
 **Install the script**
