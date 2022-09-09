@@ -234,14 +234,15 @@ class VPNGateApp:
 		global APP_LOG_FILENAME
 
 		_console_formatter = logging.Formatter('%(message)s')
-		_file_formatter = logging.Formatter('%(message)s')
+		_file_formatter = logging.Formatter("%(message)s (At %(filename)s:%(lineno)d)")
 
 		_ch = logging.StreamHandler()
 		_ch.setLevel(logging.INFO)
 		_ch.setFormatter(_console_formatter)
 
 		self.log_path = os.path.join(self.work_dir, APP_LOG_FILENAME)
-		_fh = logging.FileHandler(self.log_path, mode='w')
+
+		_fh = logging.FileHandler(self.log_path, mode='a')
 		_fh.setLevel(logging.NOTSET)
 		_fh.setFormatter(_file_formatter)
 
