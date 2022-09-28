@@ -1,8 +1,14 @@
 from .VPN import *
 from .NetworkingUtils import *
-from .VPNGateCache import *
+
+
+class VPNTestSummary:
+	def __init__(self):
+		self.available = None
+		self.ping = None
+		self.bandwidth = None
 
 
 class VPNTester:
-	def __init__(self, cache: VPNGateCache):
-		self.cache = cache
+	def test_vpn(self, vpn: VPN, timeout: int=5) -> VPNTestSummary:
+		raise NotImplementedError()

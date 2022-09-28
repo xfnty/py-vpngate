@@ -61,10 +61,16 @@ class VPNGateCache:
 
 		logging.debug('Cache manager shut down')
 
-	def get_filtered_vpn_count(self) -> int:
+	def get_inactive_list(self) -> list:
 		raise NotImplementedError()
 
-	def reset_filtered(self):
+	def reset_inactive_list(self):
+		raise NotImplementedError()
+
+	def make_inactive(self, vpn: VPN):
+		raise NotImplementedError()
+
+	def make_active(self, vpn: VPN):
 		raise NotImplementedError()
 
 	def is_cache_valid(self) -> bool:

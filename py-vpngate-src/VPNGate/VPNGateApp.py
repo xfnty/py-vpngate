@@ -242,11 +242,15 @@ class VPNGateApp:
 			print()
 
 	def _filter_vpn_cache(self, timeout):
-		raise NotImplementedError()
+		for vpn in self.vpn_cache.vpns:
+			logging.info(f"Checking {vpn.host} ...")
+			summary = self.vpn_tester.test_vpn(vpn, timeout)
+			if not summary.available:
+				self.vpn_cache.make_inactive(vpn)
 
 	def _reset_filter(self):
-		oldnew_vpn_count = self.vpn_cache.get_filtered_vpn_count()
-		self.vpn_cache.reset_filtered()
+		oldnew_vpn_count = self.vpn_cache.get_inactive_list()
+		self.vpn_cache.reset_inactive_list()
 		logging.info(f"Moved {oldnew_vpn_count} VPNs from filter to active cache")
 
 	def _save_config(self, host: str):
