@@ -4,9 +4,12 @@ import logging
 import argparse
 import traceback
 from sys import argv
+
+from .VPNTester import *
 from .VPNManager import *
 from .VPNGateCache import *
 from .VPNSuggestions import *
+
 from .FormatUtils import *
 from .FilesystemUtils import *
 
@@ -32,8 +35,8 @@ class VPNGateApp:
 
 		self.backend_bindings = {
 			'nmcli': VPNBackendNmcli,
-			'powersh': VPNBackendPowershell,
-			'ovpn': VPNBackendOpenVPN,
+			#'powersh': VPNBackendPowershell,
+			#'ovpn': VPNBackendOpenVPN,
 			None: None
 		}
 
@@ -42,22 +45,75 @@ class VPNGateApp:
 		self.arg_parser = argparse.ArgumentParser(
 			prog='vpngate',
 			description='Parses public VPN lists and gives best VPN suggestions.',
-			epilog=f"Log file is saved to '{self.log_path}'"
+			epilog=f"log file is saved to '{self.log_path}'"
 		)
-		self.arg_parser.add_argument('-l', dest='print_list', action='store_true', help=f"list cached VPN servers")
-		self.arg_parser.add_argument('-u', dest='update_cache', action='store_true', help=f"update VPN list cache")
-		self.arg_parser.add_argument('-b', dest='suggest_best', action='store_true', help=f"show VPNs with highest speed")
-		self.arg_parser.add_argument('-cb', dest='connect_best', action='store_true', help=f"find best VPN and connect to it. You can always press Ctrl+C to abort the operation")
-		self.arg_parser.add_argument('-c', metavar='HOSTNAME', dest='hostname_to_connect', const=None, help=f"connect to the VPN host")
-		self.arg_parser.add_argument('-p', metavar='HOSTNAME', dest='hostname_to_show', const=None, help=f"show more information about specified host")
-		self.arg_parser.add_argument('-s', metavar='HOSTNAME', dest='save_config_hostname', const=None, help=f"save OpenVPN config for the given server")
-		self.arg_parser.add_argument('-t', metavar='TIMEOUT', dest='timeout', type=int, help=f"specify a timeout for the commands")
-		self.arg_parser.add_argument('-r', dest='remove_profile', action='store_true', help=f"Remove '{APP_VPN_PROFILE_NAME}' from VPN settings")
-		self.arg_parser.add_argument('--use', metavar='BACKEND', dest='backend', const=None, help=f"Specify backend for connecting to VPN. Avavilable backends are {backends_str}. OS Specific is used by default.")
+		self.arg_parser.add_argument(
+			'-l',
+			dest='print_list', action='store_true',
+			help=f"list cached VPN servers"
+		)
+		self.arg_parser.add_argument(
+			'-u',
+			dest='update_vpn_cache', action='store_true',
+			help=f"update VPN list vpn_cache"
+		)
+		self.arg_parser.add_argument(
+			'-b',
+			dest='suggest_best', action='store_true',
+			help=f"show VPNs with highest speed"
+		)
+		self.arg_parser.add_argument(
+			'-cb',
+			dest='connect_best', action='store_true', 
+			help=f"find best VPN and connect to it. " + 
+			f"You can always press Ctrl+C to abort the operation"
+		)
+		self.arg_parser.add_argument(
+			'-c',
+			metavar='HOSTNAME', dest='hostname_to_connect', const=None, 
+			help=f"connect to specified VPN host"
+		)
+		self.arg_parser.add_argument(
+			'-f',
+			dest='filter_vpn_cache', action='store_true', 
+			help=f"filter vpn_cache by checking if a VPN host is available"
+		)
+		self.arg_parser.add_argument(
+			'-rf',
+			dest='reset_filter', action='store_true', 
+			help=f"move VPN entries from filtered cache to active"
+		)
+		self.arg_parser.add_argument(
+			'-p',
+			metavar='HOSTNAME', dest='hostname_to_show', const=None, 
+			help=f"show more information about specified host"
+		)
+		self.arg_parser.add_argument(
+			'-s',
+			metavar='HOSTNAME', dest='save_config_hostname', const=None, 
+			help=f"save OpenVPN config for the given server"
+		)
+		self.arg_parser.add_argument(
+			'-t',
+			metavar='TIMEOUT', dest='timeout', type=int, 
+			help=f"specify a timeout for the commands"
+		)
+		self.arg_parser.add_argument(
+			'-r',
+			dest='remove_profile', action='store_true', 
+			help=f"remove '{APP_VPN_PROFILE_NAME}' from VPN settings"
+		)
+		self.arg_parser.add_argument(
+			'--use', 
+			metavar='BACKEND', dest='backend', const=None, 
+			help=f"specify backend for connecting to VPN. " + 
+			f"Avavilable backends are {backends_str}. OS Specific is used by default."
+		)
 		self.args = None
 		
-		self.cache = VPNGateCache()
+		self.vpn_cache = VPNGateCache()
 		self.vpn_manager = VPNManager()
+		self.vpn_tester = VPNTester(self.vpn_cache)
 
 	def run(self):
 		arg_str = ' '.join([os.path.basename(argv[0])] + argv[1:])
@@ -72,14 +128,20 @@ class VPNGateApp:
 			self._remove_profile()
 			return
 
-		if self.args.update_cache or (not self.cache.is_cache_valid() and len(argv) > 1):
-			self.cache.update()
+		if self.args.update_vpn_cache or (not self.vpn_cache.is_cache_valid() and len(argv) > 1):
+			self.vpn_cache.update()
 
 		if self.args.save_config_hostname is not None:
 			self._save_config(self.args.save_config_hostname)
 
 		elif self.args.connect_best:
 			self._connect_best(self.args.timeout)
+
+		elif self.args.filter_vpn_cache:
+			self._filter_vpn_cache(self.args.timeout)
+
+		elif self.args.reset_filter:
+			self._reset_filter()
 
 		elif self.args.suggest_best:
 			self._suggest_best()
@@ -106,7 +168,7 @@ class VPNGateApp:
 
 		try:
 			self.vpn_manager.shutdown()
-			self.cache.shutdown()
+			self.vpn_cache.shutdown()
 		except Exception:
 			pass
 
@@ -120,8 +182,8 @@ class VPNGateApp:
 			logging.debug(f"Exception:\n{traceback.format_exception(e)}")
 			return False
 
-		if not self.cache.init(work_dir=self.work_dir, dont_update=True):
-			logging.error("Failed to initialize cache")
+		if not self.vpn_cache.init(work_dir=self.work_dir, dont_update=True):
+			logging.error("Failed to initialize vpn_cache")
 			return False
 
 		if self.args.backend not in self.backend_bindings:
@@ -135,10 +197,10 @@ class VPNGateApp:
 		return True
 
 	def _print_list(self):
-		print(*self.cache.vpns, sep='\n')
+		print(*self.vpn_cache.vpns, sep='\n')
 
 	def _suggest_best(self):
-		print(*best_vpn_by_speed(self.cache.vpns), sep='\n')
+		print(*best_vpn_by_speed(self.vpn_cache.vpns), sep='\n')
 
 	def _connect_best(self, timeout=None):
 		global APP_VPN_PROFILE_NAME
@@ -146,7 +208,7 @@ class VPNGateApp:
 		timeout = 5 if timeout is None else timeout
 		profile = None
 		try:
-			for i, vpn in enumerate(best_vpn_by_speed(self.cache.vpns, count=len(self.cache.vpns))):
+			for i, vpn in enumerate(best_vpn_by_speed(self.vpn_cache.vpns, count=len(self.vpn_cache.vpns))):
 				profile = self.vpn_manager.create_profile(
 					config=vpn.config,
 					name='VPNGate Temp Profile'
@@ -179,15 +241,23 @@ class VPNGateApp:
 			self.vpn_manager.remove(profile)
 			print()
 
+	def _filter_vpn_cache(self, timeout):
+		raise NotImplementedError()
+
+	def _reset_filter(self):
+		oldnew_vpn_count = self.vpn_cache.get_filtered_vpn_count()
+		self.vpn_cache.reset_filtered()
+		logging.info(f"Moved {oldnew_vpn_count} VPNs from filter to active cache")
+
 	def _save_config(self, host: str):
 		filepath = os.path.join(os.getcwd(), host + '.ovpn')
-		if self.cache.save_config(
+		if self.vpn_cache.save_config(
 				host=host,
 				filepath=filepath):
 			logging.info(f"Config saved to '{filepath}'")
 
 	def _show_host(self, host: str):
-		vpn = self.cache.find(host)
+		vpn = self.vpn_cache.find(host)
 		if vpn != None:
 			vpn.print_description()
 		else:
@@ -198,7 +268,7 @@ class VPNGateApp:
 
 		timeout = 5 if timeout is None else timeout
 		filepath = host + '.ovpn'
-		vpn = self.cache.find(host=host)
+		vpn = self.vpn_cache.find(host=host)
 
 		if vpn is None:
 			logging.error(f"Unknown VPN host '{host}'")

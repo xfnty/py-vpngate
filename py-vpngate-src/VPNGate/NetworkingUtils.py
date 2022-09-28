@@ -30,12 +30,3 @@ def make_request(url: str, verbose=True) -> object:
 			logging.debug(f"Exception:\n{''.join(traceback.format_exception(e))}")
 		return None
 	return load
-
-
-def ping(addr: str, count=1, timeout=1) -> float:
-	"""
-	Throws:
-		Network related exceptions
-	"""
-
-	raise NotImplementedError('ping() is not implemented yet')

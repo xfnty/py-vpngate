@@ -61,6 +61,12 @@ class VPNGateCache:
 
 		logging.debug('Cache manager shut down')
 
+	def get_filtered_vpn_count(self) -> int:
+		raise NotImplementedError()
+
+	def reset_filtered(self):
+		raise NotImplementedError()
+
 	def is_cache_valid(self) -> bool:
 		"""
 		Warning! This method doesn't check whether the cache is a valid CSV file.
