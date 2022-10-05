@@ -33,7 +33,17 @@ and attempt to connect to best VPN by host speed specified in downloaded CSV lis
 > VPN list from releases page 
 > and later updating it *after* connecting to the VPN.
 > 
-> Also the error message could be found in `/usr/local/bin/py-vpngate-src/vpngate.log`
+> The error message can be found in `/usr/local/bin/py-vpngate-src/vpngate.log`
+>
+> This may happen because of a restricted access to `vpngate.net` in your country.
+
+**Filter unavailable VPN servers**
+
+(This may take a lot of time)
+
+```bash
+vpngate -f
+```
 
 **More features**
 

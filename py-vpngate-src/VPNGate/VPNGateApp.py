@@ -244,15 +244,18 @@ class VPNGateApp:
 	def _filter_vpn_cache(self, timeout=None):
 		timeout = 0.5 if timeout is None else timeout
 
-		for i, vpn in enumerate(self.vpn_cache.vpns):
-			print("{:<28}".format(f"[{i+1}/{len(self.vpn_cache.vpns)}] {vpn.ip}"), end='', flush=True)
+		start_vpn_count = len(self.vpn_cache.vpns)
+		i = 0
+		while i < len(self.vpn_cache.vpns):
+			vpn = self.vpn_cache.vpns[i]
 
+			msg = "{:<28}".format(f"[{i+1}/{len(self.vpn_cache.vpns)}] {vpn.host}")
 			if self.vpn_tester.test_vpn(vpn, timeout=timeout).available:
-				print('online', end='')
+				i += 1
+				logging.info(msg + " online")
 			else:
 				self.vpn_cache.set_unavailable(vpn)
-				
-			print()
+				logging.info(msg)
 
 	def _reset_filter(self):
 		unavailable_vpn_count = len(self.vpn_cache.unavailable_vpns)

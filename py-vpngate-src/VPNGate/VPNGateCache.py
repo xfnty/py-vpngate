@@ -215,7 +215,7 @@ class VPNGateCache:
 
 		self.unavailable_vpns.clear()
 		try:
-			with open(VPNGATE_UNAVAILABLE_FILTER_FILENAME) as file:
+			with open(os.path.join(self.work_dir, VPNGATE_UNAVAILABLE_FILTER_FILENAME)) as file:
 				unavailable_hosts = [host.strip() for host in file.readlines()]
 
 				for host in unavailable_hosts:
@@ -224,9 +224,8 @@ class VPNGateCache:
 						self.vpns.remove(vpns_by_host[host])
 
 		except OSError as e:
-			raise e
-			#self._save_unavailable_vpns()
+			self._save_unavailable_vpns()
 
 	def _save_unavailable_vpns(self):
-		with open(VPNGATE_UNAVAILABLE_FILTER_FILENAME, 'w') as file:
+		with open(os.path.join(self.work_dir, VPNGATE_UNAVAILABLE_FILTER_FILENAME), 'w') as file:
 			file.write('\n'.join((vpn.host for vpn in self.unavailable_vpns)) + '\n')
