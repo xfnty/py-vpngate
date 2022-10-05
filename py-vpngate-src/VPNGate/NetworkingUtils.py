@@ -1,6 +1,7 @@
 import logging
 import traceback
 import urllib.request
+import socket
 
 
 def make_request(url: str, verbose=True) -> object:
@@ -32,10 +33,12 @@ def make_request(url: str, verbose=True) -> object:
 	return load
 
 
-def ping(addr: str, count=1, timeout=1) -> float:
-	"""
-	Throws:
-		Network related exceptions
-	"""
-
-	raise NotImplementedError('ping() is not implemented yet')
+def try_connect(ip: str, port: int, timeout=0.5) -> bool:
+	with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+		try:
+			s.settimeout(timeout)
+			s.connect((ip, port))
+		except Exception as e:
+			return False
+		s.close()
+	return True

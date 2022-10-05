@@ -12,18 +12,20 @@ from .FilesystemUtils import *
 
 VPNGATE_API_URL = 'https://www.vpngate.net/api/iphone'
 VPNGATE_CACHE_FILENAME = '.vpngate_cache'
+VPNGATE_UNAVAILABLE_FILTER_FILENAME = '.vpngate_filter'
 VPNGATE_TEMP_CACHE_FILENAME = '.vpngate_temp_cache'
 
 
 class VPNGateCache:
-	"""Manages local cache with all the VPN parameters."""
+	"""Manages local VPN cache"""
 
-	global VPNGATE_CACHE_FILENAME
+	global VPNGATE_CACHE_FILENAME, VPNGATE_TEMP_CACHE_FILENAME, VPNGATE_UNAVAILABLE_FILTER_FILENAME
 
 	def __init__(self):
 		self.work_dir = get_file_dirname(__file__)
 		self.cache_filepath = None
-		self.vpns = None
+		self.vpns = []
+		self.unavailable_vpns = []
 
 	def init(self, work_dir: str=None, dont_update: bool=False) -> bool:
 		"""
@@ -39,19 +41,19 @@ class VPNGateCache:
 		if work_dir is not None:
 			self.work_dir = work_dir
 		self.cache_filepath = os.path.join(work_dir, VPNGATE_CACHE_FILENAME)
-		self.vpns = []
 
 		if not dont_update and not self.is_cache_valid():
 			if not self._download_cache():
 				return False
 
 		self._load_cache_entries()
+		self._filter_unavailable_vpns()
 
 		logging.debug(f"Cache manager initialized (working directory is '{self.work_dir}')")
 		return True
 
 	def shutdown(self) -> None:
-		"""No Throw"""
+		self._save_unavailable_vpns()
 
 		try:
 			if not self.is_cache_valid():
@@ -61,13 +63,19 @@ class VPNGateCache:
 
 		logging.debug('Cache manager shut down')
 
+	def reset_unavailable_vpns(self):
+		self.vpns.extend(self.unavailable_vpns)
+		self.unavailable_vpns.clear()
+		self._save_unavailable_vpns()
+
+	def set_unavailable(self, vpn: VPN, unavailable: bool=True):
+		self.unavailable_vpns.append(vpn)
+		self._save_unavailable_vpns()
+
+		if vpn in self.vpns:
+			self.vpns.remove(vpn)
+
 	def is_cache_valid(self) -> bool:
-		"""
-		Warning! This method doesn't check whether the cache is a valid CSV file.
-
-		No Throw
-		"""
-
 		if not os.path.exists(self.cache_filepath):
 			return False
 		try:
@@ -80,8 +88,6 @@ class VPNGateCache:
 		return True
 
 	def update(self):
-		"""Downloads a new cache."""
-
 		global VPNGATE_TEMP_CACHE_FILENAME, VPNGATE_CACHE_FILENAME
 
 		logging.debug(f"Updating cache...")
@@ -133,13 +139,6 @@ class VPNGateCache:
 				logging.debug(f"Failed to remove '{VPNGATE_TEMP_CACHE_FILENAME}'")
 
 	def save_config(self, host: str, filepath: str) -> bool:
-		"""
-		Returns:
-			bool: whether VPN config was successfully found and saved
-
-		No Throw
-		"""
-
 		logging.debug(f"Saving config for '{host}' to '{filepath}' ...")
 
 		try:
@@ -161,23 +160,9 @@ class VPNGateCache:
 		return True
 
 	def find(self, host: str) -> VPN:
-		"""
-		Returns:
-			VPN
-			None
-
-		No Throw
-		"""
-		
 		return next((v for v in self.vpns if v.host == host), None)
 
 	def _load_cache_entries(self, vpnlist=None, filename=None) -> bool:
-		"""
-		Reads cache and loads VPNs into 'self.vpns' list.
-
-		No Throw
-		"""
-
 		if filename is None:
 			filename = os.path.join(self.work_dir, self.cache_filepath)
 
@@ -195,12 +180,6 @@ class VPNGateCache:
 		return True
 
 	def _download_cache(self, filename=None) -> bool:
-		"""
-		Downloads and saves VPNGate list locally.
-
-		No Throw
-		"""
-
 		global VPNGATE_API_URL
 
 		logging.debug(f"Downloading cache from '{VPNGATE_API_URL}'")
@@ -230,3 +209,24 @@ class VPNGateCache:
 
 		logging.debug(f"Cache saved to '{filename}'")
 		return True
+
+	def _filter_unavailable_vpns(self):
+		vpns_by_host = {vpn.host: vpn for vpn in self.vpns}
+
+		self.unavailable_vpns.clear()
+		try:
+			with open(VPNGATE_UNAVAILABLE_FILTER_FILENAME) as file:
+				unavailable_hosts = [host.strip() for host in file.readlines()]
+
+				for host in unavailable_hosts:
+					if host in vpns_by_host:
+						self.unavailable_vpns.append(vpns_by_host[host])
+						self.vpns.remove(vpns_by_host[host])
+
+		except OSError as e:
+			raise e
+			#self._save_unavailable_vpns()
+
+	def _save_unavailable_vpns(self):
+		with open(VPNGATE_UNAVAILABLE_FILTER_FILENAME, 'w') as file:
+			file.write('\n'.join((vpn.host for vpn in self.unavailable_vpns)) + '\n')
