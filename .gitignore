@@ -1,6 +1,7 @@
 # Files
 *.log
 .vpngate_cache
+.vpngate_filter
 .vpngate_temp_cache
 .vpngate_nmcli_out
 *.ovpn

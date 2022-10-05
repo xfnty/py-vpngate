@@ -11,8 +11,9 @@ if __name__ == '__main__':
 		app = VPNGateApp(work_dir=get_file_dirname(__file__))
 		app.run()
 	except Exception as e:
-		app.close()
-		logging.critical('Unhandled exception:\n' + '\n'.join(traceback.format_exception(e)))
+		print()
+		exceptions = traceback.format_exception(e)
+		logging.critical(f"Caught unhandled exception:\n" + '\n'.join(exceptions))
 	except KeyboardInterrupt:
 		print()
 	app.close()

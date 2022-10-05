@@ -55,7 +55,7 @@ class VPNGateApp:
 		self.arg_parser.add_argument(
 			'-u',
 			dest='update_vpn_cache', action='store_true',
-			help=f"update VPN list vpn_cache"
+			help=f"update VPN cache"
 		)
 		self.arg_parser.add_argument(
 			'-b',
@@ -76,7 +76,7 @@ class VPNGateApp:
 		self.arg_parser.add_argument(
 			'-f',
 			dest='filter_vpn_cache', action='store_true', 
-			help=f"filter vpn_cache by checking if a VPN host is available"
+			help=f"filter VPN cache by checking if a VPN host is available"
 		)
 		self.arg_parser.add_argument(
 			'-rf',
@@ -113,7 +113,7 @@ class VPNGateApp:
 		
 		self.vpn_cache = VPNGateCache()
 		self.vpn_manager = VPNManager()
-		self.vpn_tester = VPNTester(self.vpn_cache)
+		self.vpn_tester = VPNTester()
 
 	def run(self):
 		arg_str = ' '.join([os.path.basename(argv[0])] + argv[1:])
@@ -197,7 +197,7 @@ class VPNGateApp:
 		return True
 
 	def _print_list(self):
-		print(*self.vpn_cache.vpns, sep='\n')
+		print(*sorted(self.vpn_cache.vpns, key=lambda vpn: vpn.country_short), sep='\n')
 
 	def _suggest_best(self):
 		print(*best_vpn_by_speed(self.vpn_cache.vpns), sep='\n')
@@ -225,7 +225,7 @@ class VPNGateApp:
 				self.vpn_manager.disconnect(profile)
 				self.vpn_manager.remove(profile)
 
-				# Only to rename existing profile
+				# Only to rename existing profile in network manager
 				logging.info(f"connection to '{vpn.host}' established. Finishing")
 				profile = self.vpn_manager.create_profile(
 					config=vpn.config,
@@ -241,17 +241,22 @@ class VPNGateApp:
 			self.vpn_manager.remove(profile)
 			print()
 
-	def _filter_vpn_cache(self, timeout):
-		for vpn in self.vpn_cache.vpns:
-			logging.info(f"Checking {vpn.host} ...")
-			summary = self.vpn_tester.test_vpn(vpn, timeout)
-			if not summary.available:
-				self.vpn_cache.make_inactive(vpn)
+	def _filter_vpn_cache(self, timeout=None):
+		timeout = 0.5 if timeout is None else timeout
+
+		for i, vpn in enumerate(self.vpn_cache.vpns):
+			print("{:<28}".format(f"[{i+1}/{len(self.vpn_cache.vpns)}] {vpn.ip}"), end='', flush=True)
+
+			if self.vpn_tester.test_vpn(vpn, timeout=timeout).available:
+				print('online', end='')
+			else:
+				self.vpn_cache.set_unavailable(vpn)
+				
+			print()
 
 	def _reset_filter(self):
-		oldnew_vpn_count = self.vpn_cache.get_inactive_list()
-		self.vpn_cache.reset_inactive_list()
-		logging.info(f"Moved {oldnew_vpn_count} VPNs from filter to active cache")
+		unavailable_vpn_count = len(self.vpn_cache.unavailable_vpns)
+		self.vpn_cache.reset_unavailable_vpns()
 
 	def _save_config(self, host: str):
 		filepath = os.path.join(os.getcwd(), host + '.ovpn')
