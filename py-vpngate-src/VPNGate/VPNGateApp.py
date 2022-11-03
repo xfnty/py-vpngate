@@ -17,9 +17,7 @@ from .VPNBackendNmcli import *
 from .VPNBackendOpenVPN import *
 from .VPNBackendPowershell import *
 
-
-APP_VPN_PROFILE_NAME = 'VPNGate Profile'
-APP_LOG_FILENAME = 'vpngate.log'
+from .Constants import *
 
 
 class VPNGateApp:
@@ -76,7 +74,7 @@ class VPNGateApp:
 		self.arg_parser.add_argument(
 			'-f',
 			dest='filter_vpn_cache', action='store_true', 
-			help=f"filter VPN cache by checking if a VPN host is available"
+			help=f"filter VPNs by availability using TCP and VPN backend"
 		)
 		self.arg_parser.add_argument(
 			'-rf',
@@ -113,7 +111,7 @@ class VPNGateApp:
 		
 		self.vpn_cache = VPNGateCache()
 		self.vpn_manager = VPNManager()
-		self.vpn_tester = VPNTester()
+		self.vpn_tester = VPNTester(self.vpn_manager)
 
 	def run(self):
 		arg_str = ' '.join([os.path.basename(argv[0])] + argv[1:])
@@ -203,9 +201,9 @@ class VPNGateApp:
 		print(*best_vpn_by_speed(self.vpn_cache.vpns), sep='\n')
 
 	def _connect_best(self, timeout=None):
+		timeout = 5 if timeout is None else timeout
 		global APP_VPN_PROFILE_NAME
 
-		timeout = 5 if timeout is None else timeout
 		profile = None
 		try:
 			for i, vpn in enumerate(best_vpn_by_speed(self.vpn_cache.vpns, count=len(self.vpn_cache.vpns))):
@@ -242,20 +240,29 @@ class VPNGateApp:
 			print()
 
 	def _filter_vpn_cache(self, timeout=None):
-		timeout = 0.5 if timeout is None else timeout
-
+		timeout = 10 if timeout is None else timeout
 		start_vpn_count = len(self.vpn_cache.vpns)
 		i = 0
 		while i < len(self.vpn_cache.vpns):
 			vpn = self.vpn_cache.vpns[i]
 
 			msg = "{:<28}".format(f"[{i+1}/{len(self.vpn_cache.vpns)}] {vpn.host}")
-			if self.vpn_tester.test_vpn(vpn, timeout=timeout).available:
-				i += 1
-				logging.info(msg + " online")
-			else:
+
+			tcp_ok = self.vpn_tester.test_vpn(vpn, timeout=0.5).available
+			if not tcp_ok:
 				self.vpn_cache.set_unavailable(vpn)
 				logging.info(msg)
+				continue
+
+			vpn_ok = self.vpn_tester.test_vpn_with_vpnmanager(vpn, timeout=timeout).available
+			if not vpn_ok:
+				self.vpn_cache.set_unavailable(vpn)
+				logging.info(msg)
+				continue
+
+			i += 1
+			logging.info(msg + " online")
+				
 
 	def _reset_filter(self):
 		unavailable_vpn_count = len(self.vpn_cache.unavailable_vpns)
