@@ -246,7 +246,7 @@ class VPNGateApp:
 		while i < len(self.vpn_cache.vpns):
 			vpn = self.vpn_cache.vpns[i]
 
-			msg = "{:<28}".format(f"[{i+1}/{len(self.vpn_cache.vpns)}] {vpn.host}")
+			msg = "{:<28}".format(f"[{i}/{len(self.vpn_cache.vpns)}] {vpn.host}")
 
 			tcp_ok = self.vpn_tester.test_vpn(vpn, timeout=0.5).available
 			if not tcp_ok:
