@@ -39,3 +39,16 @@ class VPNConfig:
 			if contents.isspace() or contents == '':
 				return None
 			return VPNConfig(text=content)
+
+	def __eq__(self, other: object) -> bool:
+		if not hasattr(other, 'text'):
+			return False
+		return self.text == other.text
+
+	def __ne__(self, other: object) -> bool:
+		if not hasattr(other, 'text'):
+			return True
+		return self.text != other.text
+
+	def __hash__(self) -> int:
+		return hash(self.text)

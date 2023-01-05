@@ -112,20 +112,29 @@ class VPNGateCache:
 			if not self._load_cache_entries(new_vpns, VPNGATE_TEMP_CACHE_FILENAME):
 				logging.error('Old cache exists but failed to load a new one')
 
-			vpns_to_add = []
-			vpn_hostnames = [vpn.host for vpn in self.vpns]
+			vpns_updated = 0
+			vpns_added = 0
 			for new in new_vpns:
-				if new.host not in vpn_hostnames:
-					vpns_to_add.append(new)
-			self.vpns.extend(vpns_to_add)
+				old = self.find(new.host)
+				if old == new:
+					continue
+				elif old != None:
+					self.vpns.remove(old)
+					vpns_updated += 1
+				else:
+					vpns_added += 1
+				self.vpns.append(new)
 
-			with open(os.path.join(self.work_dir, VPNGATE_CACHE_FILENAME), 'a') as cache:
-				for vpn in vpns_to_add:
+			self.vpns = list(set(self.vpns))
+
+			with open(os.path.join(self.work_dir, VPNGATE_CACHE_FILENAME), 'w') as cache:
+				cache.write("HostName,IP,Score,Ping,Speed,CountryLong,CountryShort,NumVpnSessions,Uptime,TotalUsers,TotalTraffic,LogType,Operator,Message,OpenVPN_ConfigData_Base64\n")
+				for vpn in self.vpns:
 					cache.write(vpn.dump() + '\n')
 
 			logging.info(
-				f"Downloaded {len(vpns_to_add)} new VPN profiles. " +\
-				f"{len(self.vpns)} in total"
+				f"Successfully updated vpn list. " +\
+				f"{vpns_added} Added, {vpns_updated} updated. {len(self.vpns)} In total."
 			)
 
 			try:
@@ -170,7 +179,7 @@ class VPNGateCache:
 				else:
 					vpnlist.extend(vpns)
 		except Exception as e:
-			logging.debug(f"Failed to load cache. Exception:\n{''.join(traceback.format_exception(e))}")
+			logging.debug(f"Failed to load cache.")
 			return False
 		return True
 

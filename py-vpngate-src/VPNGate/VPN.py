@@ -75,3 +75,16 @@ class VPN:
 			str(format_bytes(self.speed)),
 			str(self.sessions)
 		)
+
+	def __eq__(self, other: object) -> bool:
+		if not (hasattr(other, 'host') and hasattr(other, 'ip') and hasattr(other, 'config')):
+			return False
+		return self.host == other.host and self.ip == other.ip and self.config == other.config
+
+	def __ne__(self, other: object) -> bool:
+		if not (hasattr(other, 'host') and hasattr(other, 'ip') and hasattr(other, 'config')):
+			return True
+		return self.host != other.host or self.ip != other.ip or self.config != other.config
+
+	def __hash__(self) -> int:
+		return hash(self.config.__hash__())
