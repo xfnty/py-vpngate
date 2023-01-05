@@ -14,7 +14,8 @@ class VPNTester:
 		self.vpn_manager = vpn_manager
 
 	def test_vpn(self, vpn: VPN, timeout: int=1) -> VPNTestSummary:
-		return VPNTestSummary(try_connect(vpn.ip, 443, timeout=timeout))
+		return VPNTestSummary(try_connect(vpn.ip, 443 if vpn.port == 0 else vpn.port, timeout=timeout))
+		# return VPNTestSummary(try_connect(vpn.ip, 443, timeout=timeout))
 
 	def test_vpn_with_vpnmanager(self, vpn: VPN, timeout: int=5) -> VPNTestSummary:
 		# Duplicate from VPNGateApp.py:276

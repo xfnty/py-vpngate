@@ -9,6 +9,7 @@ class VPN:
 			self,
 			host='none',
 			ip='none',
+			port=0,
 			country_short='none',
 			country_long='none',
 			ping=-1,
@@ -21,6 +22,7 @@ class VPN:
 			config_base64=''):
 		self.host = host
 		self.ip = ip
+		self.port = port
 		self.country_short = country_short
 		self.country_long = country_long
 		self.ping = ping
@@ -33,9 +35,17 @@ class VPN:
 		self.config = VPNConfig(text_base64=config_base64)
 
 	def from_cache_entry(entry: dict):
+		port = 0
+		
+		cfg = base64.b64decode(entry['OpenVPN_ConfigData_Base64']).decode(encoding='utf-8')
+		for line in cfg.split('\n'):
+			if line.startswith('remote'):
+				port = int(line.strip().split(' ')[-1])
+
 		return VPN(
 			entry['HostName'],
 			entry['IP'],
+			port,
 			entry['CountryShort'],
 			entry['CountryLong'],
 			int(entry['Ping']) if entry['Ping'].isnumeric() else -1,
@@ -77,14 +87,14 @@ class VPN:
 		)
 
 	def __eq__(self, other: object) -> bool:
-		if not (hasattr(other, 'host') and hasattr(other, 'ip') and hasattr(other, 'config')):
+		if not hasattr(other, 'config'):
 			return False
-		return self.host == other.host and self.ip == other.ip and self.config == other.config
+		return self.config == other.config
 
 	def __ne__(self, other: object) -> bool:
-		if not (hasattr(other, 'host') and hasattr(other, 'ip') and hasattr(other, 'config')):
+		if not hasattr(other, 'config'):
 			return True
-		return self.host != other.host or self.ip != other.ip or self.config != other.config
+		return self.config != other.config
 
 	def __hash__(self) -> int:
 		return hash(self.config.__hash__())
