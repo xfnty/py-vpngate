@@ -179,7 +179,7 @@ class VPNGateCache:
 				else:
 					vpnlist.extend(vpns)
 		except Exception as e:
-			logging.debug(f"Failed to load cache. " + '\n'.join(traceback.format_exception_only(__exc=e, value=None)))
+			logging.debug(f"Failed to load cache. " + str(e))
 			return False
 		return True
 
