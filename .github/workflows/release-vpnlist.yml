@@ -15,7 +15,7 @@ jobs:
 
     - name: Get current date
       id: date
-      run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+      run: echo "::set-output name=date::$(date +'%d-%m-%Y')"
 
     - name: Create VPN list
       run: |
@@ -25,6 +25,7 @@ jobs:
       uses: marvinpinto/action-automatic-releases@latest
       with:
         title: "VPN list for ${{ steps.date.outputs.date }}"
+        automatic_release_tag: latest
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
         prerelease: false
         files: |
