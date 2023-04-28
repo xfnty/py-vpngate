@@ -5,8 +5,6 @@ Simple script for parsing public VPNGate VPN lists and connecting to available V
 Right now the script uses GNOME's Network Manager to make connections so 
 it should work fine everywhere if there is `nmcli` utility.
 
-<!-- However support for connecting using **OpenVPN** and **PowerShell** will be added soon. -->
-
 ## Usage
 
 **Install the script**
@@ -29,14 +27,13 @@ This command will download VPN list from [VPNGate](https://www.vpngate.net/api/i
 and attempt to connect to best VPN by host speed specified in downloaded CSV list.
 
 > If you see message like `Request to ... failed`
-> try to [downloading](https://github.com/ts-vadim/py-vpngate/releases) 
-> VPN list from releases page. You rename this file to `.vpngate_cache` 
+> try [downloading](https://github.com/ts-vadim/py-vpngate/releases) 
+> VPN list from releases page. Rename the downloaded file to `.vpngate_cache` 
 > and place it inside `/usr/local/bin/py-vpngate-src` folder.
-> and later updating it *after* connecting to the VPN.
 > 
 > The error message can be found in `/usr/local/bin/py-vpngate-src/vpngate.log`
 >
-> This may happen because of a restricted access to `vpngate.net` in your country.
+> This may happen because of a restricted access to vpngate.net in your country.
 
 **Filter unavailable VPN servers**
 
