@@ -30,7 +30,8 @@ and attempt to connect to best VPN by host speed specified in downloaded CSV lis
 
 > If you see message like `Request to ... failed`
 > try to [downloading](https://github.com/ts-vadim/py-vpngate/releases) 
-> VPN list from releases page 
+> VPN list from releases page. You rename this file to `.vpngate_cache` 
+> and place it inside `/usr/local/bin/py-vpngate-src` folder.
 > and later updating it *after* connecting to the VPN.
 > 
 > The error message can be found in `/usr/local/bin/py-vpngate-src/vpngate.log`
