@@ -1,5 +1,8 @@
 [![Code Quality Check](https://github.com/ts-vadim/py-vpngate/actions/workflows/quality-check.yml/badge.svg)](https://github.com/ts-vadim/py-vpngate/actions/workflows/quality-check.yml)
 
+## Useful links
+- [Urwid docs](http://urwid.org/tutorial/)
+
 ## Installing
 **Cloning the repository**
 ```
