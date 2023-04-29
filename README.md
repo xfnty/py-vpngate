@@ -16,11 +16,9 @@ source .venv/bin/activate
 - main: `pip install -r requirements/main.txt`
 - dev: `pip install -r requirements/dev.txt`
 
-**Running linters and Django tests**
+**Running linters on every commit**
 1. Install `dev` dependencies with `pip install -r requirements/dev.txt` command.
 2. Install pre-commit git hooks:
   - `pre-commit install --hook-type pre-commit`
-  - `pre-commit install --hook-type pre-push`
 
 - *Linters* now will run on every **commit**. Type `pre-commit run -a` to run them manually.
-- *Tests* will run on every **push** or on `pre-commit run --hook-stage manual tests` command.
