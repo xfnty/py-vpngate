@@ -3,6 +3,7 @@
 ## Useful links
 - [Urwid docs](http://urwid.org/tutorial/)
 
+
 ## Installing
 **Cloning the repository**
 ```
@@ -24,4 +25,19 @@ source .venv/bin/activate
 2. Install pre-commit git hooks:
   - `pre-commit install --hook-type pre-commit`
 
-- *Linters* now will run on every **commit**. Type `pre-commit run -a` to run them manually.
+*Linters* now will run on every **commit**. Type `pre-commit run -a` to run them manually.
+
+
+<details>
+<summary>
+
+## Todo
+
+</summary>
+
+- [ ] Updating & downloading VPN list from releases
+- [ ] Searching specific VPNs
+- [ ] Connecting system VPN manager to a VPN
+- [ ] Checking whether VPN hosts are alive
+
+</details>
