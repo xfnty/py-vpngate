@@ -1,4 +1,4 @@
-[![Code Quality Check](https://github.com/ts-vadim/vpngate/actions/workflows/quality-check.yml/badge.svg)](https://github.com/ts-vadim/django_project/actions/workflows/quality-check.yml)
+[![Code Quality Check](https://github.com/ts-vadim/py-vpngate/actions/workflows/quality-check.yml/badge.svg)](https://github.com/ts-vadim/py-vpngate/actions/workflows/quality-check.yml)
 
 ## Installing
 **Cloning the repository**
