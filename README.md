@@ -27,11 +27,6 @@ vpngate -ur
 vpngate -cb
 ```
 
-> If you see message like `Request to ... failed` run `vpngate -ur` command.
-> The error message can be found in `/usr/local/bin/py-vpngate-src/vpngate.log`
-> This may happen because of a restricted access to `vpngate.net` in your country.
-
-
 **Filter unavailable VPN servers**
 
 (This may take a lot of time)
