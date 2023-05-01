@@ -3,6 +3,7 @@ import sys
 import logging
 import argparse
 import traceback
+import urllib.request
 from sys import argv
 
 from .VPNTester import *
@@ -54,6 +55,11 @@ class VPNGateApp:
 			'-u',
 			dest='update_vpn_cache', action='store_true',
 			help=f"update VPN cache"
+		)
+		self.arg_parser.add_argument(
+			'-ur',
+			dest='download_vpn_cache', action='store_true',
+			help=f"Download daily updated VPN cache from GitHub releases"
 		)
 		self.arg_parser.add_argument(
 			'-b',
@@ -126,33 +132,27 @@ class VPNGateApp:
 			self._remove_profile()
 			return
 
-		if self.args.update_vpn_cache or (not self.vpn_cache.is_cache_valid() and len(argv) > 1):
+		if self.args.download_vpn_cache:
+			self._download_cache()
+		elif self.args.update_vpn_cache or (not self.vpn_cache.is_cache_valid() and len(argv) > 1):
 			self.vpn_cache.update()
 
 		if self.args.save_config_hostname is not None:
 			self._save_config(self.args.save_config_hostname)
-
 		elif self.args.connect_best:
 			self._connect_best(self.args.timeout)
-
 		elif self.args.filter_vpn_cache:
 			self._filter_vpn_cache(self.args.timeout)
-
 		elif self.args.reset_filter:
 			self._reset_filter()
-
 		elif self.args.suggest_best:
 			self._suggest_best()
-
 		elif self.args.print_list:
 			self._print_list()
-
 		elif self.args.hostname_to_show is not None:
 			self._show_host(self.args.hostname_to_show)
-
 		elif self.args.hostname_to_connect is not None:
 			self._connect(self.args.hostname_to_connect, self.args.timeout)
-
 		elif len(argv) == 1:
 			self.arg_parser.print_usage()
 
@@ -193,6 +193,13 @@ class VPNGateApp:
 			return False
 
 		return True
+
+	def _download_cache(self):
+		print('Downloading VPN list ...', flush=True)
+		response = urllib.request.urlopen(VPNGATE_RELEASED_CACHE)
+		filepath = os.path.join(self.work_dir, VPNGATE_CACHE_FILENAME)
+		with open(filepath, 'wb') as file:
+			file.write(response.read())
 
 	def _print_list(self):
 		print(*sorted(self.vpn_cache.vpns, key=lambda vpn: vpn.country_short), sep='\n')
